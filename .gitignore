@@ -8,3 +8,6 @@ venv/
 
 # built policy index — derived, rebuild with: python -m mayday.policy_index
 policies/.index.*
+
+# adk web local state and run output
+mayday/.adk/
