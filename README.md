@@ -137,9 +137,26 @@ MAYDAY_PUBLIC_URL=https://<your-ngrok-host>/sms
 which behind ngrok is the public address, not the local one the request appears
 to arrive at.
 
-To poke at it locally without a Twilio account, set
-`MAYDAY_SMS_ALLOW_UNSIGNED=1`. It is off by default so a half-configured
+### Testing without a phone number
+
+Twilio will not rent a number to most trial accounts any more, so the SMS path
+is testable locally instead:
+
+```bash
+uvicorn sms.app:app --reload --port 8003
+python -m sms.simulate "+15551110000"                       # interactive
+python -m sms.simulate "+15551110000" "UA482 was cancelled"  # one message
+```
+
+The simulator signs its requests the way Twilio does, using
+`TWILIO_AUTH_TOKEN` from `.env` — a simulator that skipped validation would be
+bypassing the one part least worth trusting. With no token at all, set
+`MAYDAY_SMS_ALLOW_UNSIGNED=1`; it is off by default so a half-configured
 deployment fails closed rather than accepting anything.
+
+Everything the service sends is recorded at `GET /outbox`, delivered or not,
+and the simulator waits on it. That is how the after-the-deadline reply is
+observable when there is no phone to receive it.
 
 **Identity starts closed here.** The trip page is a signed-in surface and can
 hand the agent a verified booking; a phone number cannot. Caller ID is a

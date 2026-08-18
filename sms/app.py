@@ -63,6 +63,12 @@ _runner = InMemoryRunner(agent=root_agent, app_name="mayday-sms")
 # picking their phone back up an hour later continues where they left off.
 _sessions: dict[str, str] = {}
 
+# Every outbound message, whether it reached Twilio or not. The follow-up that
+# arrives after the deadline is the whole point of this adapter and it happens
+# out of band, so without somewhere to observe it there is nothing to test
+# against — only a line in a log.
+_outbox: list[dict] = []
+
 # An SMS is not a web page. Prepended to every turn rather than only the
 # first: told once, the model drifts back into bullet lists and bold within a
 # few messages, and a 900-character reply with asterisks in it becomes several
@@ -147,18 +153,32 @@ async def _run_agent(phone: str, session_id: str, body: str) -> str:
 
 
 def _send_sms(to: str, body: str) -> bool:
-    """Deliver a late answer over the REST API."""
+    """Deliver a late answer over the REST API, recording it either way."""
+    record = {"to": to, "body": body, "delivered": False, "error": None}
+    _outbox.append(record)
+
     if not (TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER):
-        # Logged rather than raised so the deadline path is exercisable
-        # locally without a Twilio account.
-        print(f"[sms] would send to {to}: {body[:160]}", flush=True)
+        # Not an error: Twilio will not rent a number to most trial accounts,
+        # so the local path has to work without one.
+        record["error"] = "twilio not configured"
+        print(f"[sms] outbox -> {to}: {body[:160]}", flush=True)
         return False
+
     from twilio.rest import Client
 
-    Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN).messages.create(
-        to=to, from_=TWILIO_FROM_NUMBER, body=body
-    )
-    return True
+    try:
+        Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN).messages.create(
+            to=to, from_=TWILIO_FROM_NUMBER, body=body
+        )
+        record["delivered"] = True
+        return True
+    except Exception as exc:
+        # A trial account cannot text an unverified number, and the number may
+        # not be owned at all. Recorded rather than raised — this runs in a
+        # done-callback where an exception would vanish.
+        record["error"] = f"{type(exc).__name__}: {str(exc)[:200]}"
+        print(f"[sms] send failed to {to}: {record['error']}", flush=True)
+        return False
 
 
 @app.get("/health")
@@ -173,6 +193,16 @@ def health() -> dict:
         "deadline_seconds": SOFT_DEADLINE_SECONDS,
         "active_conversations": len(_sessions),
     }
+
+
+@app.get("/outbox")
+def outbox(since: int = 0) -> dict:
+    """Messages this service has sent, or tried to.
+
+    Exists so the after-the-deadline path can be observed locally, where there
+    is no phone to receive it.
+    """
+    return {"total": len(_outbox), "messages": _outbox[since:]}
 
 
 @app.post("/sms")

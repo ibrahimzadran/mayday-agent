@@ -165,6 +165,23 @@
   turn costs about twenty tokens and holds. On SMS the alternative is several
   billed segments of asterisks.
 
+- **Twilio trial accounts cannot rent a phone number.** The 30-day trial
+  covers the API, not number provisioning — buying one requires adding a
+  payment method. Also worth separating early: the number you text *from* is
+  your own phone and only needs verifying, while `TWILIO_FROM_NUMBER` must be
+  a number the account actually owns. Confusing the two produces a config that
+  looks complete and cannot send.
+
+- **A health check that counts environment variables proves nothing.**
+  `can_send_followups` reported true because three variables were set, while
+  the account owned no numbers at all. Presence is not validity; checking
+  credentials against the provider is what would have caught it.
+
+- **Errors raised inside an asyncio done-callback disappear.** The
+  after-the-deadline send runs there, so a failed delivery is recorded to an
+  outbox rather than raised. Recording it also made the path observable
+  locally, where there is no phone to receive anything.
+
 - **Signature validation covers the URL Twilio signed, not the one you
   receive.** Behind ngrok those differ, so the public URL has to be configured
   explicitly or every request fails validation.
