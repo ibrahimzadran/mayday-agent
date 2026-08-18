@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ORIGIN}} → {{DEST}} · Meridian Airways</title>
+<link rel="stylesheet" href="/static/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' rx='3' fill='%2316181c'/><path d='M3 8.6l10-3.2-3.4 6.8-1-2.6z' fill='white'/></svg>">
+</head>
+<body data-token="{{TOKEN}}">
+
+<header class="masthead">
+  <div class="wrap">
+    <a class="wordmark" href="/">
+      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+        <rect width="20" height="20" rx="4" fill="currentColor"/>
+        <path d="M3.6 10.7l12.2-3.9-4.1 8.3-1.2-3.2z" fill="var(--paper)"/>
+      </svg>
+      <span>Meridian</span>
+    </a>
+    <nav class="nav">
+      <a href="#" aria-current="page">My trips</a>
+      <a href="#">Check in</a>
+      <a href="#">Flight status</a>
+      <a href="#">Help</a>
+    </nav>
+    <div class="avatar" title="{{PASSENGER}}">{{FIRST_NAME}}</div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <p class="eyebrow">Upcoming trip</p>
+  <div class="title-row">
+    <h1>{{ORIGIN}} to {{DEST}}</h1>
+    <span class="ref">Booking {{BOOKING_REF}}</span>
+  </div>
+
+  {{BANNER}}
+
+  <section class="pass" aria-label="Boarding pass">
+    <div class="pass-main">
+      <div class="route">
+        <div class="port from">
+          <span class="code">{{ORIGIN}}</span>
+          <span class="time">{{DEP_TIME}}</span>
+          <span class="date">{{DEP_DATE}}</span>
+        </div>
+        <div class="leg" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M2.4 13.1l19-6.1-6.4 13-1.9-5z"/></svg>
+        </div>
+        <div class="port to">
+          <span class="code">{{DEST}}</span>
+          <span class="time">{{ARR_TIME}}</span>
+          <span class="date">{{ARR_DATE}}</span>
+        </div>
+      </div>
+
+      <dl class="facts">
+        <div class="fact"><dt>Flight</dt><dd>{{FLIGHT_NO}}</dd></div>
+        <div class="fact"><dt>Gate</dt><dd>{{GATE}}</dd></div>
+        <div class="fact"><dt>Seat</dt><dd>{{SEAT}}</dd></div>
+        <div class="fact"><dt>Status</dt><dd><span class="status {{STATUS_CLASS}}">{{STATUS}}</span></dd></div>
+      </dl>
+    </div>
+
+    <aside class="pass-stub">
+      <div class="stub-item"><dt>Passenger</dt><dd>{{PASSENGER}}</dd></div>
+      <div class="stub-item"><dt>Fare</dt><dd>{{FARE_CLASS}}</dd></div>
+      <div class="stub-item"><dt>Reference</dt><dd>{{BOOKING_REF}}</dd></div>
+      <div class="barcode" aria-hidden="true"></div>
+    </aside>
+  </section>
+
+  <section class="next">
+    <h2>What happens next</h2>
+    <p class="lede">You do not need to call us. Everything below can be done from this page.</p>
+    <ol class="steps">
+      <li>
+        <span class="n">01</span>
+        <div>
+          <strong>Pick a new flight</strong>
+          <span>We hold no seat until you say yes. Ask for options and we will read them back before anything changes.</span>
+        </div>
+      </li>
+      <li>
+        <span class="n">02</span>
+        <div>
+          <strong>Claim what you are owed</strong>
+          <span>Meal and hotel vouchers where they apply, plus what the regulations entitle you to on this route.</span>
+        </div>
+      </li>
+      <li>
+        <span class="n">03</span>
+        <div>
+          <strong>Talk to a person if you would rather</strong>
+          <span>Ask at any point and we will hand you over with everything already written down.</span>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+</main>
+
+<button class="launcher" data-open-chat>
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M20 12a7.5 7.5 0 0 1-7.5 7.5H5.2a1.2 1.2 0 0 1-.9-2l1.5-1.6A7.5 7.5 0 1 1 20 12Z" stroke-linejoin="round"/>
+  </svg>
+  Get help
+</button>
+
+<section class="panel" hidden aria-label="Chat with Mayday">
+  <header class="panel-head">
+    <span class="dot-live" aria-hidden="true"></span>
+    <div class="who">
+      <strong>Mayday</strong>
+      <span>Rebooking assistant</span>
+    </div>
+    <button class="icon-btn" data-close-chat aria-label="Close chat">
+      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
+    </button>
+  </header>
+
+  <div class="log" id="log" aria-live="polite"></div>
+
+  <div class="chips" id="chips">
+    <button class="chip">What are my options?</button>
+    <button class="chip">Am I owed anything?</button>
+    <button class="chip">Can I get a meal voucher?</button>
+  </div>
+
+  <form class="composer" id="composer">
+    <textarea id="input" rows="1" placeholder="Ask about your trip…" autocomplete="off"></textarea>
+    <button class="send" type="submit" aria-label="Send">
+      <svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </form>
+</section>
+
+<script src="/static/widget.js"></script>
+</body>
+</html>

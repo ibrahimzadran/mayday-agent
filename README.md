@@ -116,6 +116,34 @@ version skew.
 `search_policy(query)` returns the top three chunks with citations. The agent
 answers only from them and hands off if they do not cover the question.
 
+## Web channel
+
+```bash
+uvicorn web.app:app --reload --port 8002    # then open http://localhost:8002
+```
+
+A signed-in "My Trip" page for one booking, with the agent behind a chat
+panel on it.
+
+**DOM hints.** The page already knows which trip it is showing, so the server
+folds that context into the conversation before the first message. The
+passenger opens the chat and the agent already knows the flight, the route and
+that it was cancelled — no reciting a booking reference into a chat box on
+your own trip page.
+
+Two rules make that safe:
+
+- **The browser never sends a booking reference.** It sends an opaque token
+  minted when the page rendered, and the server resolves it. A hint the client
+  could forge is not a hint, it is an authorization bypass.
+- **The hint never carries the last name.** That is the credential
+  `verify_identity` checks, and a hint containing it lets the model satisfy the
+  check with material the check exists to test for. Identity comes from seeded
+  session state the browser cannot reach.
+
+The consent gate is unchanged by the channel: a hedge still stages and asks, and
+only an explicit yes books.
+
 ## Identity gate
 
 Nothing scoped to a passenger — reading a booking, issuing a voucher against

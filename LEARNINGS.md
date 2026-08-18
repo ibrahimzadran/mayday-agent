@@ -102,6 +102,28 @@
   there rather than looking up alternates. Caught by the judge rather than by
   an assertion — tone rubrics find gaps that tool-call checks cannot express.
 
+## The web channel
+
+- **A page hint that carries the credential defeats the check it is meant to
+  skip.** The first DOM hint included the passenger's full name so the agent
+  could address them properly. The agent promptly called `verify_identity`
+  using the surname it had read from that hint — passing an identity check with
+  material the page had handed it. Fix: the hint carries the first name only,
+  and identity comes from session state the browser cannot reach. A hint may
+  carry context; it must never carry the answer to a question the system asks
+  to establish trust.
+
+- **Trust comes from the channel, not from the message.** The browser sends an
+  opaque token minted when the page rendered, never a booking reference. If the
+  client can name the booking it wants context for, the hint stops being
+  context and becomes an authorization bypass.
+
+- **A second service inherits the wrong model default.** The web app imported
+  the agent without `MAYDAY_MODEL` set, so it ran on the 20-per-day model and
+  returned rate-limit apologies while the eval suite next to it ran fine on the
+  lite model. Each process needs the environment set, not just the one being
+  actively worked on.
+
 ## Retrieval
 
 - **Query specificity drove retrieval quality more than any indexing choice.**
