@@ -3,5 +3,7 @@ fastapi
 uvicorn
 httpx
 numpy
+python-dotenv
+twilio
 # ADK 2.7 imports mcp.shared.session, which mcp 2.0 removed.
 mcp>=1.9,<2

@@ -116,6 +116,49 @@ version skew.
 `search_policy(query)` returns the top three chunks with citations. The agent
 answers only from them and hands off if they do not cover the question.
 
+## SMS channel
+
+```bash
+uvicorn sms.app:app --reload --port 8003
+ngrok http 8003
+```
+
+Then point the Twilio number's **A message comes in** webhook at
+`https://<your-ngrok-host>/sms` (HTTP POST), and set:
+
+```bash
+TWILIO_AUTH_TOKEN=...        # required — without it the webhook refuses every request
+TWILIO_ACCOUNT_SID=...       # needed only to send the late follow-up
+TWILIO_FROM_NUMBER=+1...     # the Twilio number
+MAYDAY_PUBLIC_URL=https://<your-ngrok-host>/sms
+```
+
+`MAYDAY_PUBLIC_URL` matters: the signature covers the exact URL Twilio signed,
+which behind ngrok is the public address, not the local one the request appears
+to arrive at.
+
+To poke at it locally without a Twilio account, set
+`MAYDAY_SMS_ALLOW_UNSIGNED=1`. It is off by default so a half-configured
+deployment fails closed rather than accepting anything.
+
+**Identity starts closed here.** The trip page is a signed-in surface and can
+hand the agent a verified booking; a phone number cannot. Caller ID is a
+routing address, not a credential, and it is trivially spoofed — so an SMS
+passenger verifies through the identity gate like anyone else. Same agent,
+different starting trust, decided by the channel.
+
+**Answering before the agent has.** Twilio abandons a webhook after about ten
+seconds and a single turn has been measured at seventeen. The adapter waits
+until eight, and if the agent is still working it replies "Searching now, one
+moment" over the open request and delivers the real answer afterwards over the
+REST API. The agent task is never cancelled — only its delivery route changes,
+so a rebooking already in flight still completes.
+
+Replies carry a channel note on every turn, not just the first: told once, the
+model drifts back into bold text and bullet lists within a few messages, and a
+900-character reply full of asterisks is several billed segments of noise on a
+phone.
+
 ## Web channel
 
 ```bash

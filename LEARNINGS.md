@@ -151,6 +151,35 @@
   lite model. Each process needs the environment set, not just the one being
   actively worked on.
 
+## The SMS channel
+
+- **`asyncio.wait_for` would have thrown away a rebooking.** It cancels the
+  task it is waiting on, so hitting Twilio's deadline mid-`confirm_rebook`
+  would have aborted an irreversible action already in flight.
+  `asyncio.wait({task}, timeout=...)` leaves the task running and only changes
+  how the answer is delivered.
+
+- **A channel instruction given once does not stick.** Told at the start of a
+  conversation to keep replies short and plain, the model drifts back into
+  bold text and bullet lists within a few turns. Prepending the note to every
+  turn costs about twenty tokens and holds. On SMS the alternative is several
+  billed segments of asterisks.
+
+- **Signature validation covers the URL Twilio signed, not the one you
+  receive.** Behind ngrok those differ, so the public URL has to be configured
+  explicitly or every request fails validation.
+
+- **Fail closed on a missing secret.** With no `TWILIO_AUTH_TOKEN` the webhook
+  refuses rather than skipping validation, and local testing without one has to
+  opt in explicitly. A public endpoint that starts an LLM conversation and can
+  move somebody's flight is not a good place for a convenient default.
+
+- **Caller ID is an address, not a credential.** It was tempting to map a phone
+  number to a booking and skip verification the way the web page does. Phone
+  numbers are spoofable, so the same agent starts from different trust
+  depending on which channel the message arrived through — a decision the
+  channel makes, not the model.
+
 ## Retrieval
 
 - **Query specificity drove retrieval quality more than any indexing choice.**
