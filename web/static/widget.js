@@ -178,12 +178,24 @@ async function refreshTrip(confirmationCode) {
       if (key === 'status') el.className = 'status ' + trip.status_class;
     });
 
+    /* Rebuild the banner from the flight the passenger is on NOW. Leaving the
+       original in place is worse than having none: after a rebooking it names
+       a flight they are no longer travelling on. */
     const slot = document.getElementById('banner-slot');
-    if (slot && !trip.disrupted) {
-      slot.innerHTML =
-        '<div class="confirm-note"><strong>Rebooked.</strong> Your trip below is up to date.' +
-        (confirmationCode ? ' New confirmation <code>' + confirmationCode + '</code>' : '') +
-        '</div>';
+    if (slot) {
+      const code = confirmationCode
+        ? ' New confirmation <code>' + confirmationCode + '</code>'
+        : '';
+      if (!trip.disrupted) {
+        slot.innerHTML =
+          '<div class="confirm-note"><strong>Rebooked.</strong> ' +
+          'Your updated trip is below.' + code + '</div>';
+      } else {
+        slot.innerHTML =
+          '<div class="confirm-note"><strong>Rebooked onto ' + trip.flight_no +
+          ', which ' + trip.verb + '.</strong> Reason given: ' + trip.reason +
+          '. Ask if you would rather take a different flight.' + code + '</div>';
+      }
     }
 
     const pass = document.getElementById('pass');

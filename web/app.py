@@ -199,6 +199,9 @@ def _trip_payload(booking: dict) -> dict:
             "ON_TIME": "On time",
         }.get(status, status.title()),
         "disrupted": status in ("CANCELLED", "DELAYED"),
+        "reason": flight.get("reason") or "not stated",
+        # Past tense for a flight that will not run, present for one that will.
+        "verb": "was cancelled" if status == "CANCELLED" else "is delayed",
     }
 
 

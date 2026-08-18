@@ -113,6 +113,26 @@
   carry context; it must never carry the answer to a question the system asks
   to establish trust.
 
+- **Refreshing stale UI is not the same as making it correct.** After a
+  rebooking the card updated but the banner above it still read "your flight
+  UA482 was cancelled" — because the replacement only ran when the new flight
+  was healthy, and the passenger had been moved onto a delayed one. A banner
+  that names a flight you are no longer travelling on is worse than no banner.
+  It is now rebuilt from the current flight in every case, not only the happy
+  one.
+
+- **The double-yes came back through a different door.** The rule said to stage
+  an option when the passenger names a flight. It did not cover the agent
+  naming one — so "shall I move you to UA1220?" was asked with nothing staged,
+  and the passenger's "yes" was spent on staging. Fixed by binding the rule to
+  the question rather than to who chose the flight: never end a turn having
+  suggested one specific flight without staging it.
+
+- **Internal vocabulary leaks through the seams.** The agent told a passenger
+  "I have staged your rebooking". "Staged" is a word from the tool design, not
+  from travel. Prompt rules that forbid leaking field names have to cover the
+  vocabulary of the mechanism too.
+
 - **A page and the chat on it can contradict each other.** After a rebooking
   the trip card still read CANCELLED, seat 14C, gate C17 while the chat above
   it had just moved the passenger to a different flight and gate. Neither half
