@@ -13,14 +13,47 @@ pip install -r requirements.txt
 # API key: copy mayday/.env.example to mayday/.env
 # and paste your key from https://aistudio.google.com
 
-adk web   # run from the repo root, open http://localhost:8000
 ```
 
-Try: `my flight UA482 just got cancelled, what's going on?`
+Two processes, two terminals — each needs `source .venv/bin/activate` first:
+
+```bash
+# terminal 1 — the fake airline API
+uvicorn backend.main:app --reload --port 8001
+
+# terminal 2 — the agent
+adk web                      # http://localhost:8000
+```
+
+Try: `my flight UA482 just got cancelled, find me alternates to DEN`
+
+## The fake airline API
+
+A stand-in for an airline's reservation system, so the agent talks to a real
+HTTP service instead of a dict in its own process.
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /flights/{flight_no}` | status, times, gate |
+| `GET /bookings/{booking_ref}` | passenger, fare class, seat, current flight |
+| `GET /alternates?origin=&dest=&arrive_by=` | rebooking candidates, sold-out ones included |
+| `POST /rebook` | move a booking, decrement seats, return a confirmation code |
+| `POST /vouchers` | meal or hotel voucher, idempotent per booking+type |
+| `POST /admin/reset` | restore seed state |
+
+Seeded with 16 flights over 5 routes and 8 bookings. `UA482 IAD→DEN` is
+cancelled; `UA905`, `DL388` and `AA88` are sold out.
+
+`GET /alternates` returns `503 reservation system unavailable` about 20% of the
+time on purpose, so the agent has to handle a failing dependency. Set
+`MAYDAY_CHAOS_RATE=0` to turn it off (read at startup).
+
+Interactive docs while it runs: http://localhost:8001/docs
 
 ## Layout
 
 ```
 mayday/        the ADK agent
+backend/       the fake airline API (FastAPI)
 LEARNINGS.md   engineering log
 ```
