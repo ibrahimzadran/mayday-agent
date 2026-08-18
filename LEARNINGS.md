@@ -261,6 +261,22 @@
 
 ## Tooling
 
+- **Python 3.14 hid a missing import that CI's 3.12 caught immediately.** A
+  dropped `from typing import Optional` left `Optional[dict]` referenced in an
+  annotation with nothing defining it. Under PEP 649 annotations are evaluated
+  lazily, so on 3.14 the module imported fine and every local test passed; on
+  3.12 it raised `NameError` at import and the whole suite failed. Fixed by
+  restoring the import, and guarded by `tests_annotations.py`, which calls
+  `typing.get_type_hints` on everything so annotations resolve eagerly whatever
+  interpreter is running. CI now runs both versions, because testing one hides
+  bugs the other would catch in both directions.
+
+- **An editing session can delete an import without deleting its use.** The
+  import was lost while rewiring the module for MCP; the use was added later,
+  by the identity gate. Neither change was wrong on its own, and nothing
+  connected them until a different interpreter did.
+
+
 - **A silent `str.replace` that matches nothing looks exactly like success.** A
   patch failed because the search text contained `\u2026` where the file held a
   literal `…`; the script printed "patched" and changed nothing, and the bug
