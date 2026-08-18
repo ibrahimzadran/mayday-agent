@@ -32,35 +32,35 @@
 
   <p class="eyebrow">Upcoming trip</p>
   <div class="title-row">
-    <h1>{{ORIGIN}} to {{DEST}}</h1>
+    <h1><span data-f="origin">{{ORIGIN}}</span> to <span data-f="dest">{{DEST}}</span></h1>
     <span class="ref">Booking {{BOOKING_REF}}</span>
   </div>
 
-  {{BANNER}}
+  <div id="banner-slot">{{BANNER}}</div>
 
-  <section class="pass" aria-label="Boarding pass">
+  <section class="pass" id="pass" aria-label="Boarding pass">
     <div class="pass-main">
       <div class="route">
         <div class="port from">
-          <span class="code">{{ORIGIN}}</span>
-          <span class="time">{{DEP_TIME}}</span>
-          <span class="date">{{DEP_DATE}}</span>
+          <span class="code" data-f="origin">{{ORIGIN}}</span>
+          <span class="time" data-f="dep_time">{{DEP_TIME}}</span>
+          <span class="date" data-f="dep_date">{{DEP_DATE}}</span>
         </div>
         <div class="leg" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M2.4 13.1l19-6.1-6.4 13-1.9-5z"/></svg>
         </div>
         <div class="port to">
-          <span class="code">{{DEST}}</span>
-          <span class="time">{{ARR_TIME}}</span>
-          <span class="date">{{ARR_DATE}}</span>
+          <span class="code" data-f="dest">{{DEST}}</span>
+          <span class="time" data-f="arr_time">{{ARR_TIME}}</span>
+          <span class="date" data-f="arr_date">{{ARR_DATE}}</span>
         </div>
       </div>
 
       <dl class="facts">
-        <div class="fact"><dt>Flight</dt><dd>{{FLIGHT_NO}}</dd></div>
-        <div class="fact"><dt>Gate</dt><dd>{{GATE}}</dd></div>
-        <div class="fact"><dt>Seat</dt><dd>{{SEAT}}</dd></div>
-        <div class="fact"><dt>Status</dt><dd><span class="status {{STATUS_CLASS}}">{{STATUS}}</span></dd></div>
+        <div class="fact"><dt>Flight</dt><dd data-f="flight_no">{{FLIGHT_NO}}</dd></div>
+        <div class="fact"><dt>Gate</dt><dd data-f="gate">{{GATE}}</dd></div>
+        <div class="fact"><dt>Seat</dt><dd data-f="seat">{{SEAT}}</dd></div>
+        <div class="fact"><dt>Status</dt><dd><span class="status {{STATUS_CLASS}}" data-f="status">{{STATUS}}</span></dd></div>
       </dl>
     </div>
 

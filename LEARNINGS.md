@@ -113,6 +113,13 @@
   carry context; it must never carry the answer to a question the system asks
   to establish trust.
 
+- **A page and the chat on it can contradict each other.** After a rebooking
+  the trip card still read CANCELLED, seat 14C, gate C17 while the chat above
+  it had just moved the passenger to a different flight and gate. Neither half
+  was wrong on its own; together they left no way to know which to believe. The
+  widget now re-reads the trip from the server after a confirmed rebooking
+  rather than inferring the new state from the reply text.
+
 - **Trust comes from the channel, not from the message.** The browser sends an
   opaque token minted when the page rendered, never a booking reference. If the
   client can name the booking it wants context for, the hint stops being
@@ -185,6 +192,15 @@
 - **Swallowing an exception type without its message costs hours.** Both ADK's
   MCP import and my own eval judge hid the useful part of the error. Log the
   message, not just `type(exc).__name__`.
+
+## Tooling
+
+- **A silent `str.replace` that matches nothing looks exactly like success.** A
+  patch failed because the search text contained `\u2026` where the file held a
+  literal `…`; the script printed "patched" and changed nothing, and the bug
+  surfaced two steps later as a missing JSON key. Assert that the replacement
+  landed, the same way ADK's swallowed `ImportError` and the eval judge's
+  swallowed exception hid their real causes.
 
 ## Operations
 

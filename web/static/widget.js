@@ -119,6 +119,10 @@ async function ask(text) {
     const data = await res.json();
     typing.remove();
     addAgent(data.reply || '…', data.tools);
+    if (data.trip_changed) {
+      const code = (data.reply.match(/\b([A-Z0-9]{6})\b/) || [])[1];
+      refreshTrip(code);
+    }
   } catch (err) {
     typing.remove();
     addAgent("I couldn't reach our systems just then. Try again in a moment.");
@@ -153,3 +157,40 @@ function autosize() {
   input.style.height = Math.min(input.scrollHeight, 108) + 'px';
 }
 input.addEventListener('input', autosize);
+
+/* Keeping the page honest.
+   The chat can change the trip the page is displaying. Leaving the card on its
+   original render means the screen contradicts itself — still CANCELLED beside
+   a conversation that just rebooked you — and the passenger has no way to know
+   which half to trust. So after a rebooking the page re-reads its own state
+   from the server rather than guessing from the reply text. */
+
+async function refreshTrip(confirmationCode) {
+  try {
+    const res = await fetch('/api/trip?token=' + encodeURIComponent(token));
+    if (!res.ok) return;
+    const trip = await res.json();
+
+    document.querySelectorAll('[data-f]').forEach((el) => {
+      const key = el.dataset.f;
+      if (trip[key] === undefined) return;
+      el.textContent = key === 'status' ? trip.status_label : trip[key];
+      if (key === 'status') el.className = 'status ' + trip.status_class;
+    });
+
+    const slot = document.getElementById('banner-slot');
+    if (slot && !trip.disrupted) {
+      slot.innerHTML =
+        '<div class="confirm-note"><strong>Rebooked.</strong> Your trip below is up to date.' +
+        (confirmationCode ? ' New confirmation <code>' + confirmationCode + '</code>' : '') +
+        '</div>';
+    }
+
+    const pass = document.getElementById('pass');
+    pass.classList.remove('updated');
+    void pass.offsetWidth;          // restart the animation
+    pass.classList.add('updated');
+  } catch (err) {
+    /* The card simply stays as it was; the chat already told them what happened. */
+  }
+}

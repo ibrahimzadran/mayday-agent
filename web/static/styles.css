@@ -605,3 +605,35 @@ main { padding: 40px 0 120px; }
   .panel { right: 8px; bottom: 8px; height: calc(100vh - 16px); border-radius: 6px; }
   .launcher { right: 14px; bottom: 14px; }
 }
+
+/* Flashed when the card is re-read after a rebooking. Brief and quiet: it is
+   there to say "this changed", not to celebrate. */
+@keyframes settle {
+  from { background: var(--paper-3); }
+  to   { background: var(--paper-2); }
+}
+
+.pass.updated { animation: settle 1100ms ease-out; }
+
+.confirm-note {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 14px 18px;
+  margin-bottom: 30px;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--ok);
+  border-radius: var(--radius);
+  font-size: 14px;
+}
+
+.confirm-note strong { font-weight: 600; }
+.confirm-note code {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+}

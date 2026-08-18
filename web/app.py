@@ -178,6 +178,48 @@ def _dom_hint(booking_ref: str) -> Optional[str]:
     )
 
 
+def _trip_payload(booking: dict) -> dict:
+    flight = booking["flight"]
+    status = flight["status"]
+    return {
+        "flight_no": flight["flight_no"],
+        "origin": flight["origin"],
+        "dest": flight["dest"],
+        "dep_time": _fmt_time(flight["scheduled_departure"]),
+        "arr_time": _fmt_time(flight["scheduled_arrival"]),
+        "dep_date": _fmt_date(flight["scheduled_departure"]),
+        "arr_date": _fmt_date(flight["scheduled_arrival"]),
+        "gate": flight["gate"] or "\u2014",
+        "seat": booking["seat"],
+        "status": status,
+        "status_class": status.lower().replace("_", "-"),
+        "status_label": {
+            "CANCELLED": "Cancelled",
+            "DELAYED": "Delayed",
+            "ON_TIME": "On time",
+        }.get(status, status.title()),
+        "disrupted": status in ("CANCELLED", "DELAYED"),
+    }
+
+
+@app.get("/api/trip")
+def trip_state(token: str) -> dict:
+    """Current state of the trip this page is showing.
+
+    The widget calls this after a rebooking so the card and the conversation
+    cannot disagree. A page that still says CANCELLED next to a chat that just
+    moved you is worse than no page at all — the passenger has no way to tell
+    which half to believe.
+    """
+    web_session = _web_sessions.get(token)
+    if web_session is None:
+        raise HTTPException(401, "unknown or expired session")
+    booking = airline_client.get_booking(web_session["booking_ref"])
+    if booking.get("error") or booking.get("found") is False:
+        raise HTTPException(503, "reservation system unavailable")
+    return _trip_payload(booking)
+
+
 @app.post("/api/chat")
 async def chat(req: ChatRequest) -> dict:
     web_session = _web_sessions.get(req.token)
@@ -236,4 +278,6 @@ async def chat(req: ChatRequest) -> dict:
         # Surfaced so the demo can show which tools ran. Handy for a walkthrough,
         # and it is the honest version of "look, it really called the API".
         "tools": tools_used,
+        # Tells the widget the trip on screen is now stale.
+        "trip_changed": "confirm_rebook" in tools_used,
     }
