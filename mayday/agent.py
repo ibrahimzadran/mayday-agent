@@ -1,18 +1,17 @@
 """Mayday — flight-disruption rescue agent."""
 
 import os
+import pathlib
 import re
-from typing import Optional
+import sys
 
-import httpx
 from google.adk.agents import Agent
 from google.adk.tools import ToolContext
+from google.adk.tools.mcp_tool import MCPToolset, StdioConnectionParams
+from mcp import StdioServerParameters
 
-from mayday import policy_index
-
-# The airline API. Env var so Phase 8 can point this at Cloud Run without a
-# code change; localhost:8001 is the local default (adk web owns 8000).
-BACKEND_URL = os.getenv("MAYDAY_BACKEND_URL", "http://localhost:8001")
+from mayday import airline_client
+from mayday.airline_client import UNAVAILABLE
 
 # Free-tier quota is per model, and the newest flash models get the smallest
 # allowance (20 requests/day). A single turn costs one request per tool
@@ -20,246 +19,30 @@ BACKEND_URL = os.getenv("MAYDAY_BACKEND_URL", "http://localhost:8001")
 # Override with MAYDAY_MODEL, e.g. MAYDAY_MODEL=gemini-3.5-flash-lite adk web
 MODEL = os.getenv("MAYDAY_MODEL", "gemini-3.6-flash")
 
-# One client for the process: reuses the TCP connection across tool calls
-# instead of paying the handshake every time.
-# connect=2s fails fast when the backend simply is not running; read=5s is the
-# budget for a backend that accepted the connection and then went quiet.
-_client = httpx.Client(
-    base_url=BACKEND_URL,
-    timeout=httpx.Timeout(5.0, connect=2.0),
-)
-
-# The single message the passenger sees for every infrastructure failure.
-# Deliberately vague: "reservation system unavailable" tells the model the
-# problem is ours, not the passenger's, without leaking status codes or stack
-# traces into the conversation.
-UNAVAILABLE = {"error": "reservation system unavailable"}
-
 # Session-state key holding the rebooking option the agent has presented and
 # is waiting on. Its presence is what makes a confirmation meaningful — see
 # confirm_rebook for why this is enforced in code and not only in the prompt.
 PENDING_KEY = "pending_rebook_option"
 
+_REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
 
-# --------------------------------------------------------------------------
-# HTTP plumbing
-# --------------------------------------------------------------------------
-
-
-def _request(
-    method: str,
-    path: str,
-    params: Optional[dict] = None,
-    json_body: Optional[dict] = None,
-) -> dict:
-    """Call the airline API and classify the outcome.
-
-    Returns an envelope the tools switch on, never a raw response:
-
-        {"outcome": "ok", "data": {...}}       # 200
-        {"outcome": "not_found"}               # 404 — a real answer, not a failure
-        {"outcome": "conflict", "message": …}  # 409 — the action is not allowed
-        {"outcome": "invalid_request", ...}    # 422 — the model sent bad arguments
-        {"outcome": "unavailable"}             # timeout, 5xx, refused, anything else
-
-    Five outcomes rather than one because different actors can fix them: the
-    passenger (wrong flight number), the model (bad argument, worth retrying),
-    the situation (flight sold out — pick another), and nobody (backend down).
-    """
-    try:
-        response = _client.request(method, path, params=params, json=json_body)
-    except httpx.TimeoutException:
-        # Backend accepted the connection then hung, or never answered.
-        return {"outcome": "unavailable"}
-    except httpx.RequestError:
-        # Connection refused, DNS failure, network gone. Distinct from a
-        # timeout in cause, identical in what the passenger can do about it.
-        return {"outcome": "unavailable"}
-
-    if response.status_code == 404:
-        return {"outcome": "not_found"}
-
-    if response.status_code == 409:
-        return {"outcome": "conflict", "message": str(_safe_detail(response))}
-
-    if response.status_code == 422:
-        # The API echoes back what it disliked. detail is a string when the
-        # backend raised it, a list of objects when pydantic rejected input —
-        # str() flattens both rather than assuming a shape.
-        return {"outcome": "invalid_request", "message": str(_safe_detail(response))}
-
-    if response.status_code >= 500 or response.status_code != 200:
-        # Unexpected but non-fatal statuses collapse into unavailable so no
-        # unhandled case can ever reach the model.
-        return {"outcome": "unavailable"}
-
-    try:
-        return {"outcome": "ok", "data": response.json()}
-    except ValueError:
-        # 200 with a body that is not JSON — a proxy error page, usually.
-        return {"outcome": "unavailable"}
-
-
-def _safe_detail(response: httpx.Response) -> object:
-    """Pull `detail` out of an error body without trusting it to exist."""
-    try:
-        return response.json().get("detail", "request rejected")
-    except (ValueError, AttributeError):
-        return "request rejected"
-
-
-# --------------------------------------------------------------------------
-# read-only tools
-# --------------------------------------------------------------------------
-
-
-def get_flight_status(flight_no: str) -> dict:
-    """Look up the current status of a flight by flight number.
-
-    Call this before saying anything about a specific flight. It also returns
-    the flight's origin and destination airport codes, which are required to
-    search for alternate flights.
-
-    Args:
-        flight_no: The flight number, e.g. "UA482". Case-insensitive.
-
-    Returns:
-        On success: flight_no, origin, dest (3-letter airport codes),
-        scheduled_departure, scheduled_arrival (ISO 8601 with UTC offset,
-        local to each airport), status (ON_TIME | DELAYED | CANCELLED),
-        reason, gate, seats_available.
-        If no such flight: {"found": false, ...} with a message.
-        If the airline systems are down: {"error": "reservation system unavailable"}.
-    """
-    result = _request("GET", f"/flights/{flight_no.strip().upper()}")
-
-    if result["outcome"] == "ok":
-        return result["data"]
-
-    if result["outcome"] == "not_found":
-        # A 404 is a legitimate answer to a legitimate question — the flight
-        # genuinely does not exist — so it is not shaped like an error. Only
-        # infrastructure failures get an "error" key.
-        return {
-            "found": False,
-            "flight_no": flight_no,
-            "message": (
-                f"No flight {flight_no} exists. Ask the passenger to "
-                "double-check the flight number."
-            ),
-        }
-
-    if result["outcome"] == "invalid_request":
-        return {"error": "invalid_request", "message": result["message"]}
-
-    return UNAVAILABLE
-
-
-def get_booking(booking_ref: str) -> dict:
-    """Look up a passenger's booking by its 6-character booking reference.
-
-    Args:
-        booking_ref: The booking reference, e.g. "K7QM2P". Case-insensitive.
-
-    Returns:
-        On success: booking_ref, passenger, last_name, fare_class, seat,
-        status, and a nested "flight" object with the full current status of
-        the flight they are booked on.
-        If no such booking: {"found": false, ...} with a message.
-        If the airline systems are down: {"error": "reservation system unavailable"}.
-    """
-    result = _request("GET", f"/bookings/{booking_ref.strip().upper()}")
-
-    if result["outcome"] == "ok":
-        return result["data"]
-
-    if result["outcome"] == "not_found":
-        return {
-            "found": False,
-            "booking_ref": booking_ref,
-            "message": (
-                f"No booking {booking_ref} exists. Ask the passenger to "
-                "double-check the reference from their confirmation email."
-            ),
-        }
-
-    if result["outcome"] == "invalid_request":
-        return {"error": "invalid_request", "message": result["message"]}
-
-    return UNAVAILABLE
-
-
-def find_alternate_flights(
-    origin: str, dest: str, arrive_by: Optional[str] = None
-) -> dict:
-    """Find flights a passenger could be moved to on a given route.
-
-    You must know the airport codes before calling this. Get them from
-    get_flight_status on the passenger's original flight — never guess an
-    airport code from a city name.
-
-    If the passenger stated any arrival deadline, pass arrive_by. Filtering
-    here is authoritative; filtering the returned list yourself is not.
-
-    Sold-out flights are included in the results with sold_out: true and
-    seats_available: 0. Do not offer those as options; say they are full.
-
-    Args:
-        origin: Departure airport code, e.g. "IAD".
-        dest: Arrival airport code, e.g. "DEN".
-        arrive_by: Optional latest acceptable arrival, ISO 8601 with the
-            destination's UTC offset, e.g. "2026-08-18T00:00:00-06:00" for
-            midnight in Denver. Never pass a vague phrase like "midnight".
-
-    Returns:
-        On success: origin, dest, count, and alternates — a list of flights
-        sorted earliest arrival first, each with flight_no, scheduled_departure,
-        scheduled_arrival, status, gate, seats_available and sold_out.
-        If the airline systems are down: {"error": "reservation system unavailable"}.
-    """
-    params = {"origin": origin.strip().upper(), "dest": dest.strip().upper()}
-    if arrive_by:
-        params["arrive_by"] = arrive_by
-
-    result = _request("GET", "/alternates", params=params)
-
-    if result["outcome"] == "ok":
-        data = result["data"]
-        # sold_out is derived here rather than left to the model to infer from
-        # seats_available == 0. An explicit boolean is much harder to overlook
-        # than an integer that happens to be zero.
-        alternates = [
-            {**flight, "sold_out": flight["seats_available"] <= 0}
-            for flight in data.get("alternates", [])
-        ]
-        bookable = [f for f in alternates if not f["sold_out"]]
-        return {
-            "origin": data["origin"],
-            "dest": data["dest"],
-            "count": data["count"],
-            # Precomputed so "what is the earliest flight I can actually take"
-            # is a lookup rather than something the model has to derive.
-            "earliest_bookable_flight_no": bookable[0]["flight_no"] if bookable else None,
-            "alternates": alternates,
-        }
-
-    if result["outcome"] == "not_found":
-        # The route endpoint does not 404, but handled so no outcome falls
-        # through to an unintended branch if the API changes.
-        return {
-            "origin": origin,
-            "dest": dest,
-            "count": 0,
-            "earliest_bookable_flight_no": None,
-            "alternates": [],
-        }
-
-    if result["outcome"] == "invalid_request":
-        # Recoverable by the model: it sent a malformed arrive_by and can
-        # retry with a corrected one, or drop the parameter entirely.
-        return {"error": "invalid_request", "message": result["message"]}
-
-    return UNAVAILABLE
+# Flight lookups, bookings, alternates, vouchers and policy search come from
+# the MCP server as a subprocess over stdio. The agent no longer imports those
+# functions; it discovers them over the protocol at startup, which is what
+# makes them reusable by any other MCP client.
+airline_tools = MCPToolset(
+    connection_params=StdioConnectionParams(
+        server_params=StdioServerParameters(
+            command=sys.executable,
+            args=["-m", "mcp_server.server"],
+            # Explicit so the subprocess resolves `mayday` and `mcp_server`
+            # regardless of where adk web was launched from.
+            cwd=str(_REPO_ROOT),
+            env={**os.environ, "PYTHONPATH": str(_REPO_ROOT)},
+        ),
+        timeout=15.0,
+    ),
+)
 
 
 # --------------------------------------------------------------------------
@@ -333,13 +116,15 @@ def propose_rebook(
     booking_ref = booking_ref.strip().upper()
     new_flight_no = new_flight_no.strip().upper()
 
-    booking = get_booking(booking_ref)
+    # Called in-process rather than over MCP: these are validation reads for
+    # a decision the gate is about to make, not tool calls the model chose.
+    booking = airline_client.get_booking(booking_ref)
     if booking.get("error"):
         return booking
     if booking.get("found") is False:
         return booking
 
-    flight = get_flight_status(new_flight_no)
+    flight = airline_client.get_flight_status(new_flight_no)
     if flight.get("error"):
         return flight
     if flight.get("found") is False:
@@ -479,11 +264,7 @@ def confirm_rebook(
             ),
         }
 
-    result = _request(
-        "POST",
-        "/rebook",
-        json_body={"booking_ref": booking_ref, "new_flight_no": new_flight_no},
-    )
+    result = airline_client.rebook(booking_ref, new_flight_no)
 
     if result["outcome"] == "ok":
         # Consent is spent. Leaving it set would let a later "yes" to an
@@ -514,106 +295,6 @@ def confirm_rebook(
         }
 
     return UNAVAILABLE
-
-
-def issue_voucher(booking_ref: str, voucher_type: str) -> dict:
-    """Issue a meal or hotel voucher to a passenger whose flight was disrupted.
-
-    Vouchers cost the passenger nothing and can be re-requested safely, so
-    unlike rebooking this needs no confirmation step.
-
-    Args:
-        booking_ref: The passenger's booking reference, e.g. "K7QM2P".
-        voucher_type: Either "meal" or "hotel".
-
-    Returns:
-        voucher_code, amount_usd, and whether it had already been issued.
-        If the airline systems are down: {"error": "reservation system unavailable"}.
-    """
-    voucher_type = voucher_type.strip().lower()
-    if voucher_type not in ("meal", "hotel"):
-        return {
-            "issued": False,
-            "reason": "Only meal and hotel vouchers exist.",
-        }
-
-    result = _request(
-        "POST",
-        "/vouchers",
-        json_body={
-            "booking_ref": booking_ref.strip().upper(),
-            "type": voucher_type,
-        },
-    )
-
-    if result["outcome"] == "ok":
-        data = result["data"]
-        return {
-            "issued": True,
-            "voucher_code": data["voucher_code"],
-            "voucher_type": data["type"],
-            "amount_usd": data["amount_usd"],
-            # True means this passenger already had one; the same code is
-            # returned rather than a second voucher being created.
-            "already_had_one": data["reissued"],
-        }
-
-    if result["outcome"] == "not_found":
-        return {
-            "issued": False,
-            "reason": f"No booking {booking_ref} exists.",
-        }
-
-    if result["outcome"] in ("conflict", "invalid_request"):
-        return {"issued": False, "reason": result["message"]}
-
-    return UNAVAILABLE
-
-
-def search_policy(query: str) -> dict:
-    """Search Meridian Airways policy and passenger-rights regulations.
-
-    Use this for any question about entitlements, compensation, refunds,
-    vouchers, fare rules, or what the airline owes a passenger. Never answer
-    such a question from memory — amounts and thresholds differ by regulation
-    and route, and a confident wrong number is worse than no number.
-
-    Write a specific query. Include the route or airports, the reason the
-    flight was disrupted, and what the passenger is actually asking. A query
-    like "am I owed anything" retrieves far worse than "LHR to JFK cancelled
-    due to technical fault, compensation owed".
-
-    Args:
-        query: A specific natural-language question, enriched with the route
-            and disruption reason you already know from the other tools.
-
-    Returns:
-        results: up to three policy extracts, each with citation (the document
-        and clause to quote), text, and a relevance score.
-        If the airline systems are down: {"error": "reservation system unavailable"}.
-    """
-    try:
-        hits = policy_index.search(query, k=3)
-    except RuntimeError:
-        # Index not built. Distinct from a runtime failure: it is a deployment
-        # problem, but the passenger experience is the same, so it degrades
-        # into the same message rather than exposing setup instructions.
-        return UNAVAILABLE
-    except Exception:
-        # Embedding call failed — network, quota, or auth.
-        return UNAVAILABLE
-
-    return {
-        "results": [
-            {
-                "citation": f"{h['title']} \u00a7 {h['section']}",
-                "document": h["doc"],
-                "text": h["text"],
-                "score": h["score"],
-            }
-            for h in hits
-        ]
-    }
 
 
 root_agent = Agent(
@@ -715,12 +396,12 @@ root_agent = Agent(
         "anything else."
     ),
     tools=[
-        get_flight_status,
-        get_booking,
-        find_alternate_flights,
+        # Data access and reversible actions, over the protocol.
+        airline_tools,
+        # The irreversible one stays here: its checks read the live session
+        # and the passenger's actual words, neither of which survives a
+        # process boundary. See mcp_server/server.py.
         propose_rebook,
         confirm_rebook,
-        issue_voucher,
-        search_policy,
     ],
 )

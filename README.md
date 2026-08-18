@@ -41,6 +41,31 @@ HTTP service instead of a dict in its own process.
 | `POST /vouchers` | meal or hotel voucher, idempotent per booking+type |
 | `POST /admin/reset` | restore seed state |
 
+## MCP
+
+Flight lookups, bookings, alternates, vouchers and policy search are served by
+an MCP server (`mcp_server/server.py`) that the agent spawns over stdio. The
+agent does not import those functions; it discovers them over the protocol, so
+any MCP client can use them.
+
+```bash
+python -m mcp_server.server     # standalone, for testing with any MCP client
+```
+
+**Rebooking is deliberately not exposed over MCP.** An MCP server answers any
+client that speaks the protocol, so a safety control living in one client is
+not a control — another client could call `rebook` directly and skip the
+consent gate entirely. The gate also cannot cross the boundary intact: its
+strongest check reads the passenger's real words from the ADK session, and a
+separate process has no session to read. It could only be handed a string
+asserting what the passenger said, which is exactly the claim the check exists
+to distrust.
+
+So the split is by trust boundary rather than convenience: MCP carries data
+access and reversible actions, and the one irreversible action stays in-process
+beside the conversation it depends on. Both paths share
+`mayday/airline_client.py`, so error shapes cannot drift apart.
+
 ## Policy answers (RAG)
 
 `policies/` holds ten markdown documents: Meridian Airways fare, rebooking,
@@ -94,7 +119,9 @@ Interactive docs while it runs: http://localhost:8001/docs
 ## Layout
 
 ```
-mayday/        the ADK agent
+mayday/        the ADK agent, the consent gate, the policy index
+mcp_server/    MCP server exposing the airline's read tools
 backend/       the fake airline API (FastAPI)
+policies/      policy and passenger-rights documents
 LEARNINGS.md   engineering log
 ```
