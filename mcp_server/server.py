@@ -8,22 +8,22 @@ The agent normally spawns this itself — see MCPToolset in mayday/agent.py.
 
 WHAT IS NOT HERE, AND WHY
 -------------------------
-Rebooking is absent on purpose. An MCP server is callable by *any* client that
-speaks the protocol, not only by our agent, so a control that lives in the
-client is not a control at all — a second client could call `rebook` directly
-and the consent gate would never run.
+The line is personal data, not convenience. What lives here is information
+about the airline's operation — flight status, schedules on a route, published
+policy. None of it belongs to a particular passenger, and none of it needs to
+know who is asking.
 
-The gate also cannot move here intact. Its strongest check reads the
-passenger's actual words out of the ADK session and verifies the quoted
-agreement really appears in them. Across a process boundary the server has no
-session and no transcript; it could only be handed a string claiming what the
-passenger said, which is precisely the assertion the check exists to distrust.
-Moving it would look like the same gate while silently degrading to "trust the
-caller".
+Everything scoped to one passenger stays in the agent process: reading a
+booking, issuing a voucher against it, and rebooking it. Those depend on
+session state — has this person proved they are the passenger, and did they
+agree to this specific flight — and an MCP server has no session. It could
+only be handed a claim that verification happened, which is exactly the
+assertion those checks exist to distrust. Moving them here would preserve
+their shape while degrading them to trusting the caller.
 
-So the split is by trust boundary, not by convenience: MCP carries data access
-and reversible actions, while the irreversible one stays in-process next to
-the conversation it depends on.
+The same reasoning rules out putting the controls in the client and the data
+here: an MCP server answers any client that speaks the protocol, so a check
+enforced in one client is not enforced at all.
 """
 
 import sys
@@ -63,23 +63,6 @@ def get_flight_status(flight_no: str) -> dict:
 
 
 @mcp.tool()
-def get_booking(booking_ref: str) -> dict:
-    """Look up a passenger's booking by its 6-character booking reference.
-
-    Args:
-        booking_ref: The booking reference, e.g. "K7QM2P". Case-insensitive.
-
-    Returns:
-        On success: booking_ref, passenger, last_name, fare_class, seat,
-        status, and a nested "flight" object with the full current status of
-        the flight they are booked on.
-        If no such booking: {"found": false, ...} with a message.
-        If the airline systems are down: {"error": "reservation system unavailable"}.
-    """
-    return airline_client.get_booking(booking_ref)
-
-
-@mcp.tool()
 def find_alternate_flights(origin: str, dest: str, arrive_by: str = "") -> dict:
     """Find flights a passenger could be moved to on a given route.
 
@@ -109,24 +92,6 @@ def find_alternate_flights(origin: str, dest: str, arrive_by: str = "") -> dict:
         If the airline systems are down: {"error": "reservation system unavailable"}.
     """
     return airline_client.find_alternate_flights(origin, dest, arrive_by or None)
-
-
-@mcp.tool()
-def issue_voucher(booking_ref: str, voucher_type: str) -> dict:
-    """Issue a meal or hotel voucher to a passenger whose flight was disrupted.
-
-    Vouchers cost the passenger nothing and can be re-requested safely, so
-    unlike rebooking this needs no confirmation step.
-
-    Args:
-        booking_ref: The passenger's booking reference, e.g. "K7QM2P".
-        voucher_type: Either "meal" or "hotel".
-
-    Returns:
-        voucher_code, amount_usd, and whether it had already been issued.
-        If the airline systems are down: {"error": "reservation system unavailable"}.
-    """
-    return airline_client.issue_voucher(booking_ref, voucher_type)
 
 
 @mcp.tool()

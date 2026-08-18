@@ -116,6 +116,25 @@ version skew.
 `search_policy(query)` returns the top three chunks with citations. The agent
 answers only from them and hands off if they do not cover the question.
 
+## Identity gate
+
+Nothing scoped to a passenger — reading a booking, issuing a voucher against
+it, rebooking it — happens until this conversation has called
+`verify_identity` with the booking reference **and** the last name on it.
+
+- Verification covers **one** booking. Asking about a second reference
+  requires verifying that one too, with its own last name.
+- A failed check returns the same message whether the reference does not
+  exist or the name was wrong. Distinguishing them would turn the tool into
+  an oracle for which references are real, which is most of the work of
+  guessing one.
+- Three failures locks the conversation out, because a six-character
+  reference plus a guessable surname is weak against a channel that never
+  gets tired.
+- Flight status, schedules and policy stay open — they belong to nobody.
+
+    python -m pytest tests_identity_gate.py   # or: python tests_identity_gate.py
+
 ## Consent gate
 
 Rebooking is irreversible, so it is split into two tools: `propose_rebook`
@@ -133,6 +152,9 @@ Prompt rules alone cannot guarantee any of this; the checks live in code and
 the pending option lives in session state.
 
     python -m pytest tests_consent_gate.py   # or: python tests_consent_gate.py
+
+Identity is checked before consent: agreeing to a booking you do not own is
+not consent to anything.
 
 Seeded with 16 flights over 5 routes and 8 bookings. `UA482 IAD→DEN` is
 cancelled; `UA905`, `DL388` and `AA88` are sold out.

@@ -1,13 +1,17 @@
 """Adversarial tests against the consent gate. No LLM involved."""
 from google.genai import types
 import httpx
-from mayday.agent import propose_rebook, confirm_rebook, PENDING_KEY
+from mayday.agent import propose_rebook, confirm_rebook, PENDING_KEY, VERIFIED_KEY
 httpx.post("http://localhost:8001/admin/reset")  # known seed state every run
 
 class FakeCtx:
     """Only the three attributes the tools actually touch."""
-    def __init__(self, said="", invocation_id="turn-1", state=None):
+    def __init__(self, said="", invocation_id="turn-1", state=None, verified="K7QM2P"):
         self.state = {} if state is None else state
+        # These cases exercise the consent gate, so identity is taken as
+        # already proved. tests_identity_gate.py covers the other direction.
+        if verified and VERIFIED_KEY not in self.state:
+            self.state[VERIFIED_KEY] = verified
         self.invocation_id = invocation_id
         self.user_content = types.Content(role="user", parts=[types.Part(text=said)])
 

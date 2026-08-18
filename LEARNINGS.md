@@ -72,6 +72,36 @@
   the fact that booking requires calling a second, differently-named tool
   cannot.
 
+## The identity gate
+
+- **A leak that cannot be fixed where the data lives.** `get_booking` was on
+  the MCP server, which has no session and therefore cannot know whether this
+  conversation proved anything. The fix was to move everything scoped to a
+  passenger back into the agent process and leave only impersonal data —
+  flight status, schedules, policy — on MCP. The boundary turned out to be
+  personal data, not convenience.
+
+- **A failed identity check must not say which half was wrong.** Returning
+  "no such booking" for a bad reference and "wrong name" for a bad name makes
+  the tool an oracle for which references exist, which is most of the work of
+  guessing one. Both return the same sentence.
+
+- **The judge marked a correct answer 1/5.** It claimed "those details do not
+  match our records" confirmed the booking existed. It does not — a
+  nonexistent reference returns that exact string. The rubric had described
+  the failure to avoid without describing what success looks like. This is
+  why the judge is advisory and deterministic assertions are the gates.
+
+- **An assertion that tests a path instead of an outcome will break on a
+  correct change.** A case required `get_flight_status` before reporting a
+  flight full, but `propose_rebook` validates seats itself, so a legitimate
+  route through the code failed the test. Assert what the passenger ends up
+  with, not which tools were used to get there.
+
+- **Bad news is not an answer.** Told a flight was full, the agent stopped
+  there rather than looking up alternates. Caught by the judge rather than by
+  an assertion — tone rubrics find gaps that tool-call checks cannot express.
+
 ## Retrieval
 
 - **Query specificity drove retrieval quality more than any indexing choice.**

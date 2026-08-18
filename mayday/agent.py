@@ -19,6 +19,16 @@ from mayday.airline_client import UNAVAILABLE
 # Override with MAYDAY_MODEL, e.g. MAYDAY_MODEL=gemini-3.5-flash-lite adk web
 MODEL = os.getenv("MAYDAY_MODEL", "gemini-3.6-flash")
 
+# Session-state keys for identity. Verification is per conversation: proving
+# you are the passenger on one booking says nothing about any other.
+VERIFIED_KEY = "verified_booking_ref"
+ATTEMPTS_KEY = "identity_attempts"
+
+# A booking reference is six characters and a last name is guessable, so the
+# pair is weak on its own. Capping attempts is what stops it being brute
+# forced in a channel that never gets tired.
+MAX_IDENTITY_ATTEMPTS = 3
+
 # Session-state key holding the rebooking option the agent has presented and
 # is waiting on. Its presence is what makes a confirmation meaningful — see
 # confirm_rebook for why this is enforced in code and not only in the prompt.
@@ -43,6 +53,134 @@ airline_tools = MCPToolset(
         timeout=15.0,
     ),
 )
+
+
+# --------------------------------------------------------------------------
+# the identity gate
+# --------------------------------------------------------------------------
+
+
+def _require_verified(booking_ref: str, tool_context: ToolContext) -> Optional[dict]:
+    """Refuse unless this conversation has proved it owns this booking.
+
+    Returns None to proceed, or the refusal to hand back to the model.
+    """
+    verified = tool_context.state.get(VERIFIED_KEY)
+    if verified and verified == booking_ref.strip().upper():
+        return None
+    return {
+        "permitted": False,
+        "reason": (
+            "This conversation has not verified ownership of booking "
+            f"{booking_ref.strip().upper()}. Ask the passenger for their "
+            "booking reference and the last name on the booking, then call "
+            "verify_identity. Do not reveal or change anything until it "
+            "succeeds."
+        ),
+    }
+
+
+def verify_identity(
+    booking_ref: str, last_name: str, tool_context: ToolContext
+) -> dict:
+    """Check that the passenger owns the booking they are asking about.
+
+    Required before any booking can be read, rebooked, or have a voucher
+    issued against it. Ask for both the booking reference and the last name on
+    the booking, in the passenger's own words, before calling this.
+
+    Args:
+        booking_ref: The 6-character booking reference, e.g. "K7QM2P".
+        last_name: The passenger's last name as it appears on the booking.
+
+    Returns:
+        verified: true and the passenger's name on success. On failure, a
+        refusal — which never says whether the reference or the name was the
+        part that was wrong.
+    """
+    booking_ref = booking_ref.strip().upper()
+    attempts = int(tool_context.state.get(ATTEMPTS_KEY, 0))
+
+    if attempts >= MAX_IDENTITY_ATTEMPTS:
+        return {
+            "verified": False,
+            "locked": True,
+            "reason": (
+                "Too many failed verification attempts in this conversation. "
+                "Stop trying and hand the passenger to a human colleague."
+            ),
+        }
+
+    booking = airline_client.get_booking(booking_ref)
+    if booking.get("error"):
+        return UNAVAILABLE
+
+    # One failure message for "no such booking" and for "wrong name" alike.
+    # Distinguishing them turns the tool into an oracle for which references
+    # exist, which is most of the work of guessing one.
+    ok = (
+        booking.get("found") is not False
+        and booking.get("last_name", "").strip().lower() == last_name.strip().lower()
+    )
+    if not ok:
+        tool_context.state[ATTEMPTS_KEY] = attempts + 1
+        remaining = MAX_IDENTITY_ATTEMPTS - (attempts + 1)
+        return {
+            "verified": False,
+            "attempts_remaining": max(remaining, 0),
+            "reason": (
+                "Those details do not match. Ask the passenger to check the "
+                "reference and the last name exactly as they appear on the "
+                "confirmation email."
+            ),
+        }
+
+    tool_context.state[VERIFIED_KEY] = booking_ref
+    tool_context.state[ATTEMPTS_KEY] = 0
+    return {
+        "verified": True,
+        "booking_ref": booking_ref,
+        "passenger": booking["passenger"],
+    }
+
+
+def get_booking(booking_ref: str, tool_context: ToolContext) -> dict:
+    """Look up a booking. Requires verify_identity to have succeeded first.
+
+    Args:
+        booking_ref: The booking reference, e.g. "K7QM2P". Case-insensitive.
+
+    Returns:
+        On success: booking_ref, passenger, fare_class, seat, status, and a
+        nested "flight" object with the current status of the flight they are
+        on. If this conversation has not verified the booking, a refusal.
+    """
+    refusal = _require_verified(booking_ref, tool_context)
+    if refusal:
+        return refusal
+    return airline_client.get_booking(booking_ref)
+
+
+def issue_voucher(
+    booking_ref: str, voucher_type: str, tool_context: ToolContext
+) -> dict:
+    """Issue a meal or hotel voucher to a passenger whose flight was disrupted.
+
+    Vouchers cost the passenger nothing and can be re-requested safely, so
+    unlike rebooking this needs no confirmation step — but it does need a
+    verified booking, since it spends the airline's money against one.
+
+    Args:
+        booking_ref: The passenger's booking reference, e.g. "K7QM2P".
+        voucher_type: Either "meal" or "hotel".
+
+    Returns:
+        voucher_code, amount_usd, and whether it had already been issued.
+    """
+    refusal = _require_verified(booking_ref, tool_context)
+    if refusal:
+        return refusal
+    return airline_client.issue_voucher(booking_ref, voucher_type)
 
 
 # --------------------------------------------------------------------------
@@ -115,6 +253,10 @@ def propose_rebook(
     """
     booking_ref = booking_ref.strip().upper()
     new_flight_no = new_flight_no.strip().upper()
+
+    refusal = _require_verified(booking_ref, tool_context)
+    if refusal:
+        return refusal
 
     # Called in-process rather than over MCP: these are validation reads for
     # a decision the gate is about to make, not tool calls the model chose.
@@ -198,6 +340,13 @@ def confirm_rebook(
     """
     booking_ref = booking_ref.strip().upper()
     new_flight_no = new_flight_no.strip().upper()
+
+    # Identity before consent: agreeing to a booking you do not own is not
+    # consent to anything.
+    refusal = _require_verified(booking_ref, tool_context)
+    if refusal:
+        return refusal
+
     pending = tool_context.state.get(PENDING_KEY)
 
     # Gate 1 — something must have been staged. This is what stops a bare
@@ -305,6 +454,25 @@ root_agent = Agent(
         "You are Mayday, a calm, efficient flight-disruption assistant for "
         "passengers whose travel plans just fell apart.\n"
         "\n"
+        "IDENTITY — before anything else\n"
+        "0a. Before reading, changing, or issuing anything against a booking, "
+        "you must call verify_identity with the booking reference AND the "
+        "last name on the booking. Ask the passenger for both. Never supply a "
+        "last name yourself, and never accept one the passenger did not "
+        "state.\n"
+        "0b. Until verification succeeds, do not reveal ANY detail of a "
+        "booking — not the passenger name, the flight, the seat, or whether "
+        "the reference exists at all.\n"
+        "0c. Verification covers one booking. If the passenger asks about a "
+        "different reference, ask them for the last name on THAT booking and "
+        "verify it separately. Never reuse a last name from earlier in the "
+        "conversation — a different booking belongs to a different person "
+        "until proved otherwise.\n"
+        "0d. Flight status, schedules and policy are public: answer those "
+        "without verification.\n"
+        "0e. If verification fails repeatedly, stop and offer a human "
+        "colleague. Never hint at which part was wrong.\n"
+        "\n"
         "GROUNDING\n"
         "1. ALWAYS call a tool before stating any flight, booking, or seat "
         "fact. Never guess or invent flight information, times, gates, or "
@@ -323,6 +491,10 @@ root_agent = Agent(
         "5. When asked for the earliest or best option, name ONE specific "
         "flight as your recommendation. If the earliest flight overall is "
         "full, say so and recommend the earliest one with seats.\n"
+        "5a. If the passenger asks for a specific flight and it turns out to "
+        "be full or cancelled, do not stop at the bad news. Look up "
+        "alternates on that route in the same turn and offer a named "
+        "replacement.\n"
         "6. Report times as they appear, noting they are local to each "
         "airport. Do not convert between timezones.\n"
         "\n"
@@ -396,8 +568,13 @@ root_agent = Agent(
         "anything else."
     ),
     tools=[
-        # Data access and reversible actions, over the protocol.
+        # Non-personal data only: flight status, schedules, policy text.
         airline_tools,
+        # Everything scoped to one passenger stays here, where the session
+        # knows who has proved what.
+        verify_identity,
+        get_booking,
+        issue_voucher,
         # The irreversible one stays here: its checks read the live session
         # and the passenger's actual words, neither of which survives a
         # process boundary. See mcp_server/server.py.
