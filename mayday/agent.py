@@ -50,7 +50,7 @@ def get_flight_status(flight_no: str) -> dict:
 
 root_agent = Agent(
     name="mayday",
-    model="gemini-2.5-flash",
+    model="gemini-3.6-flash",
     description="Flight-disruption rescue agent that helps stranded passengers.",
     instruction=(
         "You are Mayday, a calm, efficient flight-disruption assistant for "
