@@ -41,6 +41,24 @@ HTTP service instead of a dict in its own process.
 | `POST /vouchers` | meal or hotel voucher, idempotent per booking+type |
 | `POST /admin/reset` | restore seed state |
 
+## Consent gate
+
+Rebooking is irreversible, so it is split into two tools: `propose_rebook`
+stages an option, `confirm_rebook` executes it. `confirm_rebook` refuses
+unless all five hold:
+
+1. an option was staged for this passenger
+2. it is the same booking and the same flight they were asked about
+3. it was staged in an **earlier** turn, so the passenger had a chance to reply
+4. the confirmation quoted by the model **appears verbatim** in what the
+   passenger actually typed, read from session state rather than trusted
+5. those words are an unambiguous yes — not a hedge, question, or refusal
+
+Prompt rules alone cannot guarantee any of this; the checks live in code and
+the pending option lives in session state.
+
+    python -m pytest tests_consent_gate.py   # or: python tests_consent_gate.py
+
 Seeded with 16 flights over 5 routes and 8 bookings. `UA482 IAD→DEN` is
 cancelled; `UA905`, `DL388` and `AA88` are sold out.
 

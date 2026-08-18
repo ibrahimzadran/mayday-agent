@@ -1,0 +1,173 @@
+{
+  "eval_set_id": "eval_set_1",
+  "name": "eval_set_1",
+  "eval_cases": [
+    {
+      "eval_id": "_my_flight_UA482_got_cancelled_find_me_alterna",
+      "conversation": [
+        {
+          "invocation_id": "e-bde34d2b-4b93-4fc1-b474-67e691002d37",
+          "user_content": {
+            "parts": [
+              {
+                "text": " my flight UA482 got cancelled, find me alternates\nto DEN"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "I am so sorry your flight UA482 from Washington Dulles (IAD) to Denver (DEN) was cancelled due to crew availability. \n\nHere are the alternate non-stop options available from IAD to DEN today:\n\n* **UA1220**: Departs **20:15** (IAD local), arrives **22:20** (DEN local) — Currently delayed, 2 seats available.\n* **UA118**: Departs **21:40** (IAD local), arrives **23:45** (DEN local) — On time, 6 seats available.\n* **UA77**: Departs **22:55** (IAD local), arrives **01:00** (DEN local, Aug 18) — On time, 14 seats available.\n\n*(Note: Flight UA905 departing at 19:30 is completely sold out.)*\n\nPlease note that I cannot automatically rebook your ticket for you yet, but I can help you review these options and check further flight details.",
+                "thought_signature": "Eo4RCosRARFNMg-s15ID7b6gs3qXm9YFgabLxMin7yMkDV3HbuOLFkMD3NsT6bYDMZMnK8kX-Y9BIojTQiWBYZkljKsoItzRpgPlb9-3MsRR9ztS3lJ6Z2IY8JGXiitdQI5rO1rXre6TaI6oxmRg1KeGt8lfDRSisRNPfEcsCkpuUD_vFBEgPSlXbyH-e_r_PCqRwpCb6HDRnKdNWJZiDOcA38wCc5TKDWB8qLta8jXxHNbSN83k3UesquD-yp2VDZDhb1XnjG2LC10HqiBOv3SoHk8r7vXm_8eHd7RyA9oVqcvMbQr7Cw9t5lUeca6WqDo7s-0qDpVmr0AMQ5pcliVl4lBtQlqy9OPu8nPG5wiKvxpSfpC5XozUVfk3Ejg3BznyQ5dX_mN4MSjTyOzV8CobVH_aqNch6YHW8ZqhTLoiH3D1LrpcER5iM9EVqBXQMACanow5dldMfZtIMBFgFRIoD4Nl6gGqueLKZuZEJ58AwzFRSc6Nukf6-S7kGcSzXJevr1sE9yZe252bkoH8J0pm6OFPS7jREADqdhczbNqhUZ5nmCW9qccTRvlCA9Vp-M0dmTgGheEo_3DUfqfmV1ePXz_hS52ZlG-OLv3uIbVY7yTi9x7UzPlcXIjOLm5Rt7eOX6anuIq6YYcs63p4Z1BMvsWPrnV3LbnCnys-aP7_WK6Q4iA2QWesgqQHUo-u_yfhoa4kCa9KLrpToB8Im6RJUK7ReepJ4loIErUilCGo-GTo6hlGwIrsWq0RSOgHE6t-LTqZmRBPBUuLkQfM6s5dsfze4qm3xEdxaIRwCTVZdazFJ_hpP5l4PLUuru2YMH1PDPOsHWYbxyQEqifEofAgZQIlO6-A6BXElBiU4BT8AWWfmDkaYwKXgKMfe4M2D21xA-GuruqnhQavclWC0dzacLVkGf1VoYvVcm1SIMDpmGntgKzzDw8XqGq3Rc9jnDh3bFvSt5GmFRZhqw9Lf-gFOVx8Pe1C--OlM2-g1b2tVU10_BBdxV-DanJpgKyoS07e9qZLmAPUVfOkyDkHtBOMFUBMt3zgcWwc9kVdbnQ57543z1mBSKpcnGDezn3HwM7BAy3BCjmMh8fcnOKH29mLUCqJW7_gGoBRh1OgkMWRDoFRQy4OEeynUXGqGmVjth-_EwjlGM0h-KFR84qlNWBf-q2lTznsmR4IOrzZ3N-pYS03_NKaEi2RNgp5GynaN0G3I7ZBEcX94AkEYlLSomCzMPnLCilhlcKz26VS9aEq2TWyWI_Sfb12tYm7a9pl7EI_qkQtnRXj6o-NymAv47lhC4oAK_WoOhTJAizdGvCvCSmW3jMU-b6c3a22_Q9aWdDzV5CrC6ePTyWm7vq_c1cmjl1jxjMAdOTid3hMeC20InHoD5eJm2KWJmhStYFI2pBC0g6JIdAEgdYgUJQFroEKpiCnA-aVpAdj9Ws3JHTfoQdBL17eyS0ulO77E583rYTmCoz7IffMtEmigJgFQ5bI1Vcb3f2jPAudZMWEa3Q2CWtIvbmifHrhBYxw1sR7ZafOhhbraERkQCs2EqurZHR8vQk5dtCjlSvNEmkQLsyUbdaUftexgtfp-DKWWlYSrsb-qlI13UdGjo0nI4FaTLJYv7PE_2cKZdFQbcIrkahcLM7WrNPlgpxexyIOTzyWmGQ3IRxpgbiybK5EI1yEdEqfMGS-OZJ4KodPhtPGZlkb5dFHuSkiNMFlah7lm3z7qZUcpt2t7heX-TMTOMXnkTcUQzVvazUeXEREj2dBRw1bdSDltQgQanTdggsZcwyl7iEnD2CpIuWAUK6C66X2wvsTObdPoRyng4ULlt8mhG_CaYxn1ctJ1O8wsho3KqwY32steivs7hlhFFPJcI-1hUswkbzxuLzhLo31n5cRe7yo8wFpqUIf8DbnAHn5o4Z2yigJ6yKACPNa8aAqK7WJT5dSpZsCjYGPSkS6PdvsARWHX0iuvm1tY13MTzG77_nnx0TaTOOqYoa1D1q5-yoi4Z5e9dnUigaBU_II91yCwxGZvsfPxIoLAju9-AIbVG_OuFeLzJWDYfJPz2eGhMBXaHE3cjM_gKxn36s2lqBgg9nW26VyxBhdLyyohtZrvizKbqUvVcncougPCC7w8W6K1FaAlCGENNbHenmXVzr_oy_sFJzg8JM4s8MAOVHGLvAcBZx8UfUy95cHJyF3OSzaBItlI9HIIB14PmQ-7ahs29onCZgd7UhV8DcaL-tjhBFvIVSkBDWuWaF3N_5sEucr8VRO2Bhdy5-kM5nm7UH8hX_hdR3tJNVX075v6kYiE6OLnmpC0WpZuEDLSPg15LWZN48dZE7B7pnEitUt9IediMwgOO10U8Q0XkSwEuL6rEOK4I-D7PQf6r0mEwcOwwDfrWMuGnC1L7S1GN3325wu56KF-tAiKEwpRJIZfvvu-cMahpk_bkxd5g3F_ribs85Gxgty3K2VEqAX1OmiL1XyVAV0ThHKEmgohbNASG0MUPiFsKS5KpPbw8oxP3mRnneYCL83886FdFpIcGCmi9OsbeZs3qYbJPiOsau-uOxS4READsWG1suBK6EDDYVOe3_cYFZONCEFz8PXLuZK8q7oIdkthG27dzF6QbxIGfq6AMDLw1aM8JutikvW0DubrofIhg31owK8feCfqaAMwrmXg-P0SrPR18E4mG-x9gPOiIIafOfE8YqiWVuIKbbh3w2oPfhKb9SvVElQw1WgOml4pu7BhZ8igUFeaHTuaj1Y9gVRC0S_MVF_aTsOKkXpEqs8uySU0l2TeajAeBEH0A49f5Im0yAAHivL7Z0rygr0rE1wUKOWq34tU1stmNNiGPj88Plj1WObXAus7N3Cy3jfOd1swYrd6cWEyFa2yWVBqmYTvWS9jmHA3vZ9zEoC8MnaJauQryn--_lU-d4yAv9PKRO5"
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "invocation_events": [
+              {
+                "author": "mayday",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "call_1173508",
+                        "args": {
+                          "flight_no": "UA482"
+                        },
+                        "name": "get_flight_status"
+                      },
+                      "thought_signature": "Ep8ECpwEARFNMg_83beUhn_NhJ-9b5c9onQRTniTUmNMRI-CJBNWer6dvKvmX3V74WUKQvw4Whf0XShy1xIjpK5r71sZqGQISsUrEvqw-QVp3YpW8JzNQ9dcJ_X1nviCxuN1m9LAf-3dLg4xIwwXRTi8Mn975CUmAWJlEkVUti2hRsDy96NfQKX91fu62axF8jDq151jRa-BQs4s9RnbogWxdlNjCP-FuJEGUWBbE0k5iv-3k1V0LmxT_rib-L7xZcvW6jneav-Ib5W1ZziqDSHkuGkjM2d7IUidS_Q2aT5xwJj_vRqFT2RENjRrmLLpp3c8GEF-Q0UiEmhHzobuW-NTxvw1iJ5NtqEXx3FO_mKhJVCfgxdkdJQ2oqrCL2exiq2qYSewTpaXyYAd_V1pQEVDBjV_FzpSDFF0W5eLLAYGYnkFNETLTf09zKBRNmf_Dwv7Pg6sYQbtGjU_cXbDUGWZ5Aw2Aa8uIiVSO-vvz85OqkLp0W39iLFeG_DAI_mamwpncJ9db1N9gwNY0wxIIoIs_NEZZ2OQwLIoaDw525IWTjXHEfDcjtMD9eClU_7id1czqW4syPp8z23M-mIzBAApbbGz1POgSvo7V2PwX25BF9yaBVsp0X47_Pbx9yPp5pqwrgVvuzVuTw44H726Cg3EYyvMtf1PXmGwi8WpofEjOGMKUlDr6Hj28G0gooGXjmg8GjFFDFwbCdaZwgkrnqoP"
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "mayday",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "call_1173508",
+                        "name": "get_flight_status",
+                        "response": {
+                          "flight_no": "UA482",
+                          "origin": "IAD",
+                          "dest": "DEN",
+                          "scheduled_departure": "2026-08-17T18:05:00-04:00",
+                          "scheduled_arrival": "2026-08-17T20:10:00-06:00",
+                          "status": "CANCELLED",
+                          "reason": "crew availability",
+                          "gate": "C17",
+                          "seats_available": 0
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              },
+              {
+                "author": "mayday",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "call_4121212",
+                        "args": {
+                          "origin": "IAD",
+                          "dest": "DEN"
+                        },
+                        "name": "find_alternate_flights"
+                      },
+                      "thought_signature": "EqQCCqECARFNMg_hSCqzXQ4AxZ0m6YN_ekxzRkJVsKAAyO1WZXDzxWl-NgEyu_WKpC7Bn8krttvDK-od42TxXRRY12bpT-mg1cbcgJQZhtrQlPrklvyCO-xqev-S4yKaSmU48HfqUHtTWvopNbOjZpF4P05v9CxPQruSU2H87-VC60RMVRA6-Vi1zDCRbsb-F5EHLlsTUbzwRM-sc-7i3l8dHCqjstLo9-1hzjapl8wDKnBIYiY-Ean-PRmeelw5DVt_M_0V9HIvhz1oUzeVp7yNjQSf2RyLDjf4WUnD1LuHL_dzh-pHcAi2xmJfJK54yyf-HTLlaQRc_Z_sIwEVYl3CrmBsj8DgvpVm2HP3ifrCKREtHEqmabzCvpGpN8EZcC75a5_2iQ=="
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "mayday",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "call_4121212",
+                        "name": "find_alternate_flights",
+                        "response": {
+                          "origin": "IAD",
+                          "dest": "DEN",
+                          "count": 4,
+                          "alternates": [
+                            {
+                              "flight_no": "UA905",
+                              "origin": "IAD",
+                              "dest": "DEN",
+                              "scheduled_departure": "2026-08-17T19:30:00-04:00",
+                              "scheduled_arrival": "2026-08-17T21:35:00-06:00",
+                              "status": "ON_TIME",
+                              "reason": null,
+                              "gate": "C11",
+                              "seats_available": 0,
+                              "sold_out": true
+                            },
+                            {
+                              "flight_no": "UA1220",
+                              "origin": "IAD",
+                              "dest": "DEN",
+                              "scheduled_departure": "2026-08-17T20:15:00-04:00",
+                              "scheduled_arrival": "2026-08-17T22:20:00-06:00",
+                              "status": "DELAYED",
+                              "reason": "late inbound aircraft",
+                              "gate": "C6",
+                              "seats_available": 2,
+                              "sold_out": false
+                            },
+                            {
+                              "flight_no": "UA118",
+                              "origin": "IAD",
+                              "dest": "DEN",
+                              "scheduled_departure": "2026-08-17T21:40:00-04:00",
+                              "scheduled_arrival": "2026-08-17T23:45:00-06:00",
+                              "status": "ON_TIME",
+                              "reason": null,
+                              "gate": "C22",
+                              "seats_available": 6,
+                              "sold_out": false
+                            },
+                            {
+                              "flight_no": "UA77",
+                              "origin": "IAD",
+                              "dest": "DEN",
+                              "scheduled_departure": "2026-08-17T22:55:00-04:00",
+                              "scheduled_arrival": "2026-08-18T01:00:00-06:00",
+                              "status": "ON_TIME",
+                              "reason": null,
+                              "gate": "C19",
+                              "seats_available": 14,
+                              "sold_out": false
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              }
+            ]
+          },
+          "creation_timestamp": 1787022456.518446
+        }
+      ],
+      "session_input": {
+        "app_name": "mayday",
+        "user_id": "user"
+      },
+      "creation_timestamp": 1787022575.09812
+    }
+  ],
+  "creation_timestamp": 1787022564.269964
+}
