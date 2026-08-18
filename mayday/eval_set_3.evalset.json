@@ -1,0 +1,833 @@
+{
+  "eval_set_id": "eval_set_3",
+  "name": "eval_set_3",
+  "eval_cases": [
+    {
+      "eval_id": "UA482_cancelled_my_ref_is_K7QM2P",
+      "conversation": [
+        {
+          "invocation_id": "e-a9f9d595-c795-4ab5-856b-c8d70e0a0894",
+          "user_content": {
+            "parts": [
+              {
+                "text": "UA482 cancelled, my ref is K7QM2P"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "I'm sorry to hear your flight from Washington (IAD) to Denver (DEN) was cancelled due to crew availability, Ibrahim. \n\nI've issued a $15 meal voucher for you (`MEAL-8PYR8T`) while we get this sorted out.\n\nLooking at your options to get to Denver tonight:\n- **UA1220** departs IAD at 8:15 PM and arrives at 10:20 PM (currently delayed, 2 seats available)\n- **UA118** departs IAD at 9:40 PM and arrives at 11:45 PM (on time, 6 seats available)\n- **UA77** departs IAD at 10:55 PM and arrives at 1:00 AM on Aug 18 (on time, 14 seats available)\n\n*(Note: Our earliest flight, UA905, is currently full.)*\n\nThe earliest available option with seats is **UA1220**. Would you like me to book you on that flight?",
+                "thought_signature": "El4KXAERTTIPGa0zhA62BlpBdJSPt6zfKRlUj6dL1waLN6amo_4D0AqdlkWcTYros1TXIT83uMALlJL1UoxeIvbhPBAn_oQ4es5pgXy3tlT9NPO5TIcD6WYLP-UBnMTQ"
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "invocation_events": [
+              {
+                "author": "mayday",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "call_2461629",
+                        "args": {
+                          "booking_ref": "K7QM2P"
+                        },
+                        "name": "get_booking"
+                      },
+                      "thought_signature": "El4KXAERTTIPZDSsPELfsy-8FxpqXLJmoCcyK8f0FukQbZ_ljWNknYjgRumIwcaZzxsvHzVbGj2ED8zgLnobMlcEKEnIBxA9PwQpetN-3F7cSaxq_ADFHOTgYhwE07uB"
+                    },
+                    {
+                      "function_call": {
+                        "id": "call_2461630",
+                        "args": {
+                          "flight_no": "UA482"
+                        },
+                        "name": "get_flight_status"
+                      }
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "mayday",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "call_2461629",
+                        "name": "get_booking",
+                        "response": {
+                          "booking_ref": "K7QM2P",
+                          "passenger": "Ibrahim Khan",
+                          "last_name": "Khan",
+                          "flight_no": "UA482",
+                          "fare_class": "ECONOMY_BASIC",
+                          "seat": "14C",
+                          "status": "CONFIRMED",
+                          "flight": {
+                            "flight_no": "UA482",
+                            "origin": "IAD",
+                            "dest": "DEN",
+                            "scheduled_departure": "2026-08-17T18:05:00-04:00",
+                            "scheduled_arrival": "2026-08-17T20:10:00-06:00",
+                            "status": "CANCELLED",
+                            "reason": "crew availability",
+                            "gate": "C17",
+                            "seats_available": 0
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "function_response": {
+                        "id": "call_2461630",
+                        "name": "get_flight_status",
+                        "response": {
+                          "flight_no": "UA482",
+                          "origin": "IAD",
+                          "dest": "DEN",
+                          "scheduled_departure": "2026-08-17T18:05:00-04:00",
+                          "scheduled_arrival": "2026-08-17T20:10:00-06:00",
+                          "status": "CANCELLED",
+                          "reason": "crew availability",
+                          "gate": "C17",
+                          "seats_available": 0
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              },
+              {
+                "author": "mayday",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "call_3119835",
+                        "args": {
+                          "dest": "DEN",
+                          "origin": "IAD"
+                        },
+                        "name": "find_alternate_flights"
+                      },
+                      "thought_signature": "El4KXAERTTIP1QzY51_qjjF7-Z-XHqqAT0x7iHq5rwFkhM0zcHctQG1RXPrkW9EFRNebIV_zVwJd8sVhB2NhOzbjHlRBGqZBrrsyxpiEEv4p5oAtxMnzAFBHRJL5b7kA"
+                    },
+                    {
+                      "function_call": {
+                        "id": "call_3119836",
+                        "args": {
+                          "voucher_type": "meal",
+                          "booking_ref": "K7QM2P"
+                        },
+                        "name": "issue_voucher"
+                      }
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "mayday",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "call_3119835",
+                        "name": "find_alternate_flights",
+                        "response": {
+                          "origin": "IAD",
+                          "dest": "DEN",
+                          "count": 4,
+                          "earliest_bookable_flight_no": "UA1220",
+                          "alternates": [
+                            {
+                              "flight_no": "UA905",
+                              "origin": "IAD",
+                              "dest": "DEN",
+                              "scheduled_departure": "2026-08-17T19:30:00-04:00",
+                              "scheduled_arrival": "2026-08-17T21:35:00-06:00",
+                              "status": "ON_TIME",
+                              "reason": null,
+                              "gate": "C11",
+                              "seats_available": 0,
+                              "sold_out": true
+                            },
+                            {
+                              "flight_no": "UA1220",
+                              "origin": "IAD",
+                              "dest": "DEN",
+                              "scheduled_departure": "2026-08-17T20:15:00-04:00",
+                              "scheduled_arrival": "2026-08-17T22:20:00-06:00",
+                              "status": "DELAYED",
+                              "reason": "late inbound aircraft",
+                              "gate": "C6",
+                              "seats_available": 2,
+                              "sold_out": false
+                            },
+                            {
+                              "flight_no": "UA118",
+                              "origin": "IAD",
+                              "dest": "DEN",
+                              "scheduled_departure": "2026-08-17T21:40:00-04:00",
+                              "scheduled_arrival": "2026-08-17T23:45:00-06:00",
+                              "status": "ON_TIME",
+                              "reason": null,
+                              "gate": "C22",
+                              "seats_available": 6,
+                              "sold_out": false
+                            },
+                            {
+                              "flight_no": "UA77",
+                              "origin": "IAD",
+                              "dest": "DEN",
+                              "scheduled_departure": "2026-08-17T22:55:00-04:00",
+                              "scheduled_arrival": "2026-08-18T01:00:00-06:00",
+                              "status": "ON_TIME",
+                              "reason": null,
+                              "gate": "C19",
+                              "seats_available": 14,
+                              "sold_out": false
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "function_response": {
+                        "id": "call_3119836",
+                        "name": "issue_voucher",
+                        "response": {
+                          "issued": true,
+                          "voucher_code": "MEAL-8PYR8T",
+                          "voucher_type": "meal",
+                          "amount_usd": 15,
+                          "already_had_one": false
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              }
+            ]
+          },
+          "creation_timestamp": 1787024340.419602
+        },
+        {
+          "invocation_id": "e-6e5e31bc-8953-43a9-baf2-f8faa53440c2",
+          "user_content": {
+            "parts": [
+              {
+                "text": "the 9:40 could work"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "That would be flight UA118, departing Washington (IAD) at 9:40 PM and arriving in Denver (DEN) at 11:45 PM on August 17. \n\nWould you like me to go ahead and book you on this flight?",
+                "thought_signature": "El4KXAERTTIP-YE9JbCsvqNXTI5iFuNHRLy8i1oQor7j6RBT77FukMtlPuYzOKPTk2vZ3an2-KIpUw1kUtL4uqKTOBA5QB7gaEYmOya8B6qnBUskO-9XRm_R2KhHK8h2"
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "invocation_events": [
+              {
+                "author": "mayday",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "call_3350844",
+                        "args": {
+                          "booking_ref": "K7QM2P",
+                          "new_flight_no": "UA118"
+                        },
+                        "name": "propose_rebook"
+                      },
+                      "thought_signature": "El4KXAERTTIPK2mBmO5VO7_eX6UAyfop2dQ-ocId9MrX51gjM0G_YPpX8hc0rftzcf0deEJLcuDtwQgmsZw-Ci7LEpfRjqP9fKNbcVTWz5JbhpDVw_Wo_if-RTOLLf5-"
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "mayday",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "call_3350844",
+                        "name": "propose_rebook",
+                        "response": {
+                          "awaiting_confirmation": true,
+                          "booking_ref": "K7QM2P",
+                          "passenger": "Ibrahim Khan",
+                          "from_flight": "UA482",
+                          "to_flight": "UA118",
+                          "departs": "2026-08-17T21:40:00-04:00",
+                          "arrives": "2026-08-17T23:45:00-06:00",
+                          "instruction": "Read these details back to the passenger and ask them to confirm with a clear yes. Do not call confirm_rebook in this same turn."
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              }
+            ]
+          },
+          "creation_timestamp": 1787024364.164315
+        },
+        {
+          "invocation_id": "e-e9beba0a-ba49-4cba-b9ba-0ed32de9b20f",
+          "user_content": {
+            "parts": [
+              {
+                "text": "yes book it"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "You are all set, Ibrahim! You have been successfully rebooked on flight UA118. \n\nYour confirmation code is **B79NAX**. Your flight departs Washington (IAD) at 9:40 PM tonight and arrives in Denver (DEN) at 11:45 PM. \n\nSafe travels, and let me know if you need anything else!",
+                "thought_signature": "El4KXAERTTIPDkrt9vHl5SLHlJmIspwZqLjGfWtJuk1H4K8XOdJo5nIHXBqAaRCAkQRyDmh-Xqw54ZF_rVq0z_ZsX9Tk1IBzwktbPzU7H0lc8YnPfinopn5UokV2IMAx"
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "invocation_events": [
+              {
+                "author": "mayday",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "call_2574063",
+                        "args": {
+                          "booking_ref": "K7QM2P",
+                          "passenger_confirmation": "yes book it",
+                          "new_flight_no": "UA118"
+                        },
+                        "name": "confirm_rebook"
+                      },
+                      "thought_signature": "El4KXAERTTIPDPr7N6BxSkpTSbhuvEHcczx9iEWwrS8IxOoMSz1xl5uRjqbHM-cHImbEwFafpVv5shGavPwqiVzHfVHwPtiLrmuppZISQ-ENTr-MA6LoJ-J7Xnrqc1UV"
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "mayday",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "call_2574063",
+                        "name": "confirm_rebook",
+                        "response": {
+                          "rebooked": true,
+                          "confirmation_code": "B79NAX",
+                          "passenger": "Ibrahim Khan",
+                          "from_flight": "UA482",
+                          "to_flight": "UA118",
+                          "departs": "2026-08-17T21:40:00-04:00",
+                          "arrives": "2026-08-17T23:45:00-06:00",
+                          "seat": "UNASSIGNED"
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              }
+            ]
+          },
+          "creation_timestamp": 1787024376.392617
+        },
+        {
+          "invocation_id": "e-16622ab4-aee0-4b59-bcea-d244a4d38992",
+          "user_content": {
+            "parts": [
+              {
+                "text": "whats going on with UA482, ref K7QM2P"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "Flight UA482 from Washington (IAD) to Denver (DEN) was cancelled due to crew availability. \n\nHowever, you're all set and successfully rebooked on flight **UA118** (Confirmation code: **B79NAX**), which departs at 9:40 PM tonight and arrives in Denver at 11:45 PM.",
+                "thought_signature": "El4KXAERTTIPdDFHA1g7MrF_yls4hvI9yl84euMLF3NXt7FPFNBqbcMjhy-vAdajfUgPKKyCVd9AGI_-PLqY79FGKqa5HiiCvFGxcdPxZkfB1bR5zqJpJK2fj8pm_l2m"
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "invocation_events": [
+              {
+                "author": "mayday",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "call_3585100",
+                        "args": {
+                          "flight_no": "UA482"
+                        },
+                        "name": "get_flight_status"
+                      },
+                      "thought_signature": "El4KXAERTTIP7IWXnFn75MjL7GhGi3K3cabKz2DD48GsiyEvEPzDSMAfyu9Aemh6K1OmMvWrYBXtpZvkzyUQk7prg4idhkZrebFXs6pV9D1qor1jSO68EiGjEikEDbX4"
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "mayday",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "call_3585100",
+                        "name": "get_flight_status",
+                        "response": {
+                          "flight_no": "UA482",
+                          "origin": "IAD",
+                          "dest": "DEN",
+                          "scheduled_departure": "2026-08-17T18:05:00-04:00",
+                          "scheduled_arrival": "2026-08-17T20:10:00-06:00",
+                          "status": "CANCELLED",
+                          "reason": "crew availability",
+                          "gate": "C17",
+                          "seats_available": 0
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              }
+            ]
+          },
+          "creation_timestamp": 1787024397.4582322
+        },
+        {
+          "invocation_id": "e-e8418f42-b7db-4770-a0a8-86f5b89aa353",
+          "user_content": {
+            "parts": [
+              {
+                "text": "sure"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "Glad I could help, Ibrahim! Let me know if you need anything else before your flight tonight. Have a great trip to Denver!",
+                "thought_signature": "El4KXAERTTIPD7iTe7ZBuGpv6hlQzywPmD2LOHssaTdAcPNRnQY7Rn2BW3qASC8axJQW0axDXjhQ2EBwIdYU3JVosLzLwWt2hPsQ5fBgj5FkLjDkVxuxSct0JBdAaSYX"
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {},
+          "creation_timestamp": 1787024416.115401
+        },
+        {
+          "invocation_id": "e-43799f68-4bc7-4a03-b925-662c8b7710a8",
+          "user_content": {
+            "parts": [
+              {
+                "text": "UA482 cancelled, ref K7QM2P, options to DEN?"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "Here are your options from Washington (IAD) to Denver (DEN) today:\n\n- **UA1220**: Departs at 8:15 PM, arrives at 10:20 PM *(Delayed, 2 seats available)*\n- **UA118**: Departs at 9:40 PM, arrives at 11:45 PM *(On time, 5 seats available)*\n- **UA77**: Departs at 10:55 PM, arrives at 1:00 AM on Aug 18 *(On time, 14 seats available)*\n\n*(Note: UA905 at 7:30 PM is currently full.)*\n\nSince you are already rebooked on **UA118**, would you like to keep that flight, or would you prefer to switch to one of the other options?",
+                "thought_signature": "El4KXAERTTIPk9ey8qXTPZpCUQYSYXvMr-DcJ1tgd0_FLvna7RiQRdDmAGYpTMzD8HU7MdmZqxyryV10o86rWui_9p-cynQsQNFAIIBvA-0uP4yDvJ5EdOIqdjRKjgto"
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "invocation_events": [
+              {
+                "author": "mayday",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "call_5417580",
+                        "args": {
+                          "dest": "DEN",
+                          "origin": "IAD"
+                        },
+                        "name": "find_alternate_flights"
+                      },
+                      "thought_signature": "El4KXAERTTIPlKUrZYbeGSxFq3XsfCo7oPR1KweUUsJA81CCMN-TqWWDmeOGU7k6TpMSVZ4EAdEkRljFsftoYPDUi8LL_TBogo3Kqcidi9_aopIU8Cg6Q-5T8sQdPAuG"
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "mayday",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "call_5417580",
+                        "name": "find_alternate_flights",
+                        "response": {
+                          "origin": "IAD",
+                          "dest": "DEN",
+                          "count": 4,
+                          "earliest_bookable_flight_no": "UA1220",
+                          "alternates": [
+                            {
+                              "flight_no": "UA905",
+                              "origin": "IAD",
+                              "dest": "DEN",
+                              "scheduled_departure": "2026-08-17T19:30:00-04:00",
+                              "scheduled_arrival": "2026-08-17T21:35:00-06:00",
+                              "status": "ON_TIME",
+                              "reason": null,
+                              "gate": "C11",
+                              "seats_available": 0,
+                              "sold_out": true
+                            },
+                            {
+                              "flight_no": "UA1220",
+                              "origin": "IAD",
+                              "dest": "DEN",
+                              "scheduled_departure": "2026-08-17T20:15:00-04:00",
+                              "scheduled_arrival": "2026-08-17T22:20:00-06:00",
+                              "status": "DELAYED",
+                              "reason": "late inbound aircraft",
+                              "gate": "C6",
+                              "seats_available": 2,
+                              "sold_out": false
+                            },
+                            {
+                              "flight_no": "UA118",
+                              "origin": "IAD",
+                              "dest": "DEN",
+                              "scheduled_departure": "2026-08-17T21:40:00-04:00",
+                              "scheduled_arrival": "2026-08-17T23:45:00-06:00",
+                              "status": "ON_TIME",
+                              "reason": null,
+                              "gate": "C22",
+                              "seats_available": 5,
+                              "sold_out": false
+                            },
+                            {
+                              "flight_no": "UA77",
+                              "origin": "IAD",
+                              "dest": "DEN",
+                              "scheduled_departure": "2026-08-17T22:55:00-04:00",
+                              "scheduled_arrival": "2026-08-18T01:00:00-06:00",
+                              "status": "ON_TIME",
+                              "reason": null,
+                              "gate": "C19",
+                              "seats_available": 14,
+                              "sold_out": false
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              }
+            ]
+          },
+          "creation_timestamp": 1787024428.77902
+        },
+        {
+          "invocation_id": "e-af8318b3-f2bc-4d02-8a73-9cc73fd72613",
+          "user_content": {
+            "parts": [
+              {
+                "text": "book me on UA118"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "You are already booked on flight UA118 for tonight! Your confirmation code is **B79NAX**, departing Washington (IAD) at 9:40 PM and arriving in Denver (DEN) at 11:45 PM.",
+                "thought_signature": "El4KXAERTTIPl_F-TLZaEkaF211ZjW7nUkVLO97h8rp5rMAc9s5ERUUtbhMJ9-Ki1-BTVgJUA1dnTUiQ8Yn24jSTxgH79AexQxTQp5FxA-WpDO9KnGkmXzs3UBf7YhS0"
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "invocation_events": [
+              {
+                "author": "mayday",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "call_1506203",
+                        "args": {
+                          "booking_ref": "K7QM2P",
+                          "new_flight_no": "UA118"
+                        },
+                        "name": "propose_rebook"
+                      },
+                      "thought_signature": "El4KXAERTTIPbzfjPfP7lcOlLdUiK5F-QQ5zeLeJXLMirEk8A9fOVIGAfkDEwtr4gJwy16QTNs5en1oG4VE51l7vwWA-DATy4x1jtt8Kh5C-qQvxWcQAg9dIYyrNu-D5"
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "mayday",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "call_1506203",
+                        "name": "propose_rebook",
+                        "response": {
+                          "staged": false,
+                          "reason": "This booking is already on UA118."
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              }
+            ]
+          },
+          "creation_timestamp": 1787024441.90447
+        },
+        {
+          "invocation_id": "e-11c8fc0b-c13e-4179-9454-11868f291283",
+          "user_content": {
+            "parts": [
+              {
+                "text": "no wait"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "No problem at all! Let me know what you'd like to do — would you prefer to stay on your current booking for UA118, or switch to a different flight?",
+                "thought_signature": "El4KXAERTTIPKK51NLTrly7yBaEnuLOFh3J0yZoopRwnFxN9IiMWT3QTtTtk29dZSr463mtxRda6kU8zIl3ruFDHAgVSPJFkTDDfGrQKStN6GZzCdHypdBbqErVEEFbn"
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {},
+          "creation_timestamp": 1787024445.6368482
+        },
+        {
+          "invocation_id": "e-025d20aa-71bd-4ed4-b184-a464a3c3a2f0",
+          "user_content": {
+            "parts": [
+              {
+                "text": "UA482 cancelled ref K7QM2P, put me on UA905"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "I'm sorry, but flight UA905 is currently full and has no seats available. \n\nWould you like to look at another available flight, such as UA1220 at 8:15 PM or UA77 at 10:55 PM?",
+                "thought_signature": "El4KXAERTTIPd0csd_Y6hNSJb4KEdFhkpFYRL28i_EiSJW4SCVZhxorB3s8alqkGyps8ePkzpZ7sEhnxsLr5A-LHuZckP_PPlFAULsPimn2gcaNnMhUgHW6EBv_AmRuV"
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "invocation_events": [
+              {
+                "author": "mayday",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "call_4011186",
+                        "args": {
+                          "new_flight_no": "UA905",
+                          "booking_ref": "K7QM2P"
+                        },
+                        "name": "propose_rebook"
+                      },
+                      "thought_signature": "El4KXAERTTIPSbxNOZVkN2hxAoQNQsiRVd0DBpZgcMVflSdreE654F8t7UdU9tfAPuvls2lyQAK-ns7mOpFQPJl71EiRBYiEiGQAEAFO03KRI3x4CoUMeFEQutGLYrM9"
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "mayday",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "call_4011186",
+                        "name": "propose_rebook",
+                        "response": {
+                          "staged": false,
+                          "reason": "Flight UA905 has no seats left."
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              }
+            ]
+          },
+          "creation_timestamp": 1787024464.615909
+        },
+        {
+          "invocation_id": "e-7429243b-bf3d-40c9-b7bc-7808d6226be6",
+          "user_content": {
+            "parts": [
+              {
+                "text": "whats the earliest one I can actually take"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "The earliest flight with available seats is **UA1220**, departing Washington (IAD) at 8:15 PM and arriving in Denver (DEN) at 10:20 PM (currently delayed). \n\nWould you like me to book you on UA1220?",
+                "thought_signature": "El4KXAERTTIP56KwUYcMgsGbs580lydHK_XMAIOG6EM_x9WQ9w6gUM9OVR4QoqSav75KmqJ5eQR6ByiMALzDq_cyojjPihLb_G3Iy9sNtghaaWtb0xfNjt_dR3gKdjX8"
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "invocation_events": [
+              {
+                "author": "mayday",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "call_2404999",
+                        "args": {
+                          "dest": "DEN",
+                          "origin": "IAD"
+                        },
+                        "name": "find_alternate_flights"
+                      },
+                      "thought_signature": "El4KXAERTTIPXBAOa9vmslKqawwwoCnBMrMvuIaGoeCIl8YkpuF4PXUIioDIsGLe69SG16uHdlszrQZ65E2cCWmipcTJEJHMKXKicg6U77yMJxyZfw1wpY3PHqNTBtFy"
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "mayday",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "call_2404999",
+                        "name": "find_alternate_flights",
+                        "response": {
+                          "origin": "IAD",
+                          "dest": "DEN",
+                          "count": 4,
+                          "earliest_bookable_flight_no": "UA1220",
+                          "alternates": [
+                            {
+                              "flight_no": "UA905",
+                              "origin": "IAD",
+                              "dest": "DEN",
+                              "scheduled_departure": "2026-08-17T19:30:00-04:00",
+                              "scheduled_arrival": "2026-08-17T21:35:00-06:00",
+                              "status": "ON_TIME",
+                              "reason": null,
+                              "gate": "C11",
+                              "seats_available": 0,
+                              "sold_out": true
+                            },
+                            {
+                              "flight_no": "UA1220",
+                              "origin": "IAD",
+                              "dest": "DEN",
+                              "scheduled_departure": "2026-08-17T20:15:00-04:00",
+                              "scheduled_arrival": "2026-08-17T22:20:00-06:00",
+                              "status": "DELAYED",
+                              "reason": "late inbound aircraft",
+                              "gate": "C6",
+                              "seats_available": 2,
+                              "sold_out": false
+                            },
+                            {
+                              "flight_no": "UA118",
+                              "origin": "IAD",
+                              "dest": "DEN",
+                              "scheduled_departure": "2026-08-17T21:40:00-04:00",
+                              "scheduled_arrival": "2026-08-17T23:45:00-06:00",
+                              "status": "ON_TIME",
+                              "reason": null,
+                              "gate": "C22",
+                              "seats_available": 5,
+                              "sold_out": false
+                            },
+                            {
+                              "flight_no": "UA77",
+                              "origin": "IAD",
+                              "dest": "DEN",
+                              "scheduled_departure": "2026-08-17T22:55:00-04:00",
+                              "scheduled_arrival": "2026-08-18T01:00:00-06:00",
+                              "status": "ON_TIME",
+                              "reason": null,
+                              "gate": "C19",
+                              "seats_available": 14,
+                              "sold_out": false
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              }
+            ]
+          },
+          "creation_timestamp": 1787024476.902655
+        }
+      ],
+      "session_input": {
+        "app_name": "mayday",
+        "user_id": "user"
+      },
+      "creation_timestamp": 1787024516.7850502
+    }
+  ],
+  "creation_timestamp": 1787024512.6108642
+}
