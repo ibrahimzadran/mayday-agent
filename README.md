@@ -41,6 +41,29 @@ HTTP service instead of a dict in its own process.
 | `POST /vouchers` | meal or hotel voucher, idempotent per booking+type |
 | `POST /admin/reset` | restore seed state |
 
+## Policy answers (RAG)
+
+`policies/` holds ten markdown documents: Meridian Airways fare, rebooking,
+cancellation, delay and voucher policy, plus plain-language summaries of
+EU261, UK261, US DOT refund rules, extraordinary circumstances, and escalation
+rules. Each clause is numbered so answers can cite one.
+
+Build the index once, then it is cached on disk:
+
+```bash
+python -m mayday.policy_index      # chunks, embeds, writes policies/.index.*
+```
+
+Chunks split on level-2 headings, not fixed windows, because these documents
+are already organised by clause and a window would cut a compensation table in
+half. Embeddings are `gemini-embedding-001` truncated to 768 dimensions and
+normalized, searched by brute-force cosine similarity over numpy — 43 chunks
+does not need a vector database, and this has no server, no schema and no
+version skew.
+
+`search_policy(query)` returns the top three chunks with citations. The agent
+answers only from them and hands off if they do not cover the question.
+
 ## Consent gate
 
 Rebooking is irreversible, so it is split into two tools: `propose_rebook`

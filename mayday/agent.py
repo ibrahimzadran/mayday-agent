@@ -8,6 +8,8 @@ import httpx
 from google.adk.agents import Agent
 from google.adk.tools import ToolContext
 
+from mayday import policy_index
+
 # The airline API. Env var so Phase 8 can point this at Cloud Run without a
 # code change; localhost:8001 is the local default (adk web owns 8000).
 BACKEND_URL = os.getenv("MAYDAY_BACKEND_URL", "http://localhost:8001")
@@ -568,6 +570,52 @@ def issue_voucher(booking_ref: str, voucher_type: str) -> dict:
     return UNAVAILABLE
 
 
+def search_policy(query: str) -> dict:
+    """Search Meridian Airways policy and passenger-rights regulations.
+
+    Use this for any question about entitlements, compensation, refunds,
+    vouchers, fare rules, or what the airline owes a passenger. Never answer
+    such a question from memory — amounts and thresholds differ by regulation
+    and route, and a confident wrong number is worse than no number.
+
+    Write a specific query. Include the route or airports, the reason the
+    flight was disrupted, and what the passenger is actually asking. A query
+    like "am I owed anything" retrieves far worse than "LHR to JFK cancelled
+    due to technical fault, compensation owed".
+
+    Args:
+        query: A specific natural-language question, enriched with the route
+            and disruption reason you already know from the other tools.
+
+    Returns:
+        results: up to three policy extracts, each with citation (the document
+        and clause to quote), text, and a relevance score.
+        If the airline systems are down: {"error": "reservation system unavailable"}.
+    """
+    try:
+        hits = policy_index.search(query, k=3)
+    except RuntimeError:
+        # Index not built. Distinct from a runtime failure: it is a deployment
+        # problem, but the passenger experience is the same, so it degrades
+        # into the same message rather than exposing setup instructions.
+        return UNAVAILABLE
+    except Exception:
+        # Embedding call failed — network, quota, or auth.
+        return UNAVAILABLE
+
+    return {
+        "results": [
+            {
+                "citation": f"{h['title']} \u00a7 {h['section']}",
+                "document": h["doc"],
+                "text": h["text"],
+                "score": h["score"],
+            }
+            for h in hits
+        ]
+    }
+
+
 root_agent = Agent(
     name="mayday",
     model=MODEL,
@@ -621,6 +669,29 @@ root_agent = Agent(
         "12. After a successful rebooking, give the passenger their "
         "confirmation code clearly.\n"
         "\n"
+        "POLICY AND PASSENGER RIGHTS\n"
+        "13a. For any question about compensation, refunds, entitlements, or "
+        "what the airline owes, call search_policy. Never answer from your "
+        "own knowledge of EU261, UK261 or DOT rules — the figures differ by "
+        "route and regulation and you will get them wrong.\n"
+        "13b. Before searching, find out what the flight was and why it was "
+        "disrupted. Build a query containing the route and the recorded "
+        "reason, e.g. 'LHR to JFK cancelled due to technical fault, "
+        "compensation owed'. A vague query retrieves the wrong clause.\n"
+        "13c. Answer ONLY from the text the search returns. If it does not "
+        "cover the question, say you are not certain and offer a human "
+        "colleague. Never state an amount, deadline or threshold that is not "
+        "in the retrieved text.\n"
+        "13d. Cite the clause you relied on, in plain words: 'under UK261, "
+        "clause UK261-2'. Name the rule, not the filename.\n"
+        "13e. Note which regulation applies before quoting an amount. "
+        "Departures from UK airports fall under UK261, not EU261, and the "
+        "amounts differ. A purely domestic US itinerary has no compensation "
+        "scheme at all.\n"
+        "13f. You cannot approve or pay a compensation claim. Explain what "
+        "the passenger appears to be owed and why, then hand off to a "
+        "colleague to file it.\n"
+        "\n"
         "VOUCHERS\n"
         "13. If a flight is cancelled or heavily delayed, you may offer a "
         "meal voucher, and a hotel voucher when the delay runs overnight. "
@@ -650,5 +721,6 @@ root_agent = Agent(
         propose_rebook,
         confirm_rebook,
         issue_voucher,
+        search_policy,
     ],
 )
