@@ -1,0 +1,4 @@
+google-adk>=2.7
+fastapi
+uvicorn
+httpx
