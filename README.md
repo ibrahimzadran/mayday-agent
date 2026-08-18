@@ -41,6 +41,33 @@ HTTP service instead of a dict in its own process.
 | `POST /vouchers` | meal or hotel voucher, idempotent per booking+type |
 | `POST /admin/reset` | restore seed state |
 
+## Evals
+
+```bash
+python -m evals                    # everything
+python -m evals --fast             # the subset CI runs on every push
+python -m evals --case consent-hedge --verbose
+PYTHONPATH=. python tests_consent_gate.py   # gate unit tests, no model needed
+```
+
+Cases run against the real agent, real tools and the real backend — nothing is
+mocked, because a suite that passes against mocks only proves the mocks agree
+with each other. Each case resets the backend first and may inject a specific
+failure through `POST /admin/chaos`.
+
+Two kinds of check, deliberately unequal:
+
+- **Deterministic assertions are hard gates.** Which tools were called, in what
+  order, with what arguments, and — the only one that actually proves a booking
+  did or did not happen — what the airline's own state says afterwards. The
+  agent's prose is not evidence.
+- **An LLM judge scores tone and helpfulness 1-5**, and is advisory. A judge is
+  itself a model; making it a gate makes the suite flaky, and a flaky suite
+  teaches you to ignore red.
+
+The judge runs on a different model from the agent, because free-tier quota is
+per model and sharing one halves how many cases a run completes.
+
 ## MCP
 
 Flight lookups, bookings, alternates, vouchers and policy search are served by

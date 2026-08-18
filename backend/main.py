@@ -15,6 +15,7 @@ gracefully instead of only ever seeing the happy path. Tune with MAYDAY_CHAOS_RA
 
 import os
 import random
+import time
 from copy import deepcopy
 from datetime import datetime, timezone
 from typing import Literal
@@ -31,6 +32,16 @@ app = FastAPI(
 )
 
 CHAOS_RATE = float(os.getenv("MAYDAY_CHAOS_RATE", "0.2"))
+
+# Runtime-adjustable so an eval run can demand deterministic failure for one
+# case and none for the next, without restarting the process.
+#   mode "error"   -> 503, the flaky-dependency case
+#   mode "timeout" -> sleep past any sane client read timeout
+#   scope          -> "alternates" (the default flaky endpoint) or "all"
+_chaos = {"rate": CHAOS_RATE, "mode": "error", "scope": "alternates"}
+
+# Longer than the agent's 5s read timeout, short enough not to stall a suite.
+CHAOS_SLEEP_SECONDS = 8.0
 
 # Confirmation codes skip O/0 and I/1 — passengers read these over the phone.
 _CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
@@ -79,11 +90,21 @@ def _new_code(prefix: str = "", length: int = 6) -> str:
     return f"{prefix}{body}" if prefix else body
 
 
-def _maybe_fail() -> None:
-    """Simulate a flaky downstream. Raises 503 with the message the agent's
-    tool layer is expected to translate into a user-facing apology."""
-    if random.random() < CHAOS_RATE:
-        raise HTTPException(status_code=503, detail="reservation system unavailable")
+def _maybe_fail(endpoint: str) -> None:
+    """Simulate a flaky downstream.
+
+    Raises 503 with the message the agent's tool layer is expected to
+    translate into a user-facing apology, or stalls past the client's read
+    timeout — a different failure path that should degrade identically.
+    """
+    if _chaos["scope"] != "all" and endpoint != _chaos["scope"]:
+        return
+    if random.random() >= _chaos["rate"]:
+        return
+    if _chaos["mode"] == "timeout":
+        time.sleep(CHAOS_SLEEP_SECONDS)
+        return
+    raise HTTPException(status_code=503, detail="reservation system unavailable")
 
 
 def _parse_dt(value: str) -> datetime:
@@ -139,19 +160,21 @@ def health() -> dict:
         "status": "ok",
         "flights": len(_flights),
         "bookings": len(_bookings),
-        "chaos_rate": CHAOS_RATE,
+        "chaos": dict(_chaos),
     }
 
 
 @app.get("/flights/{flight_no}")
 def get_flight(flight_no: str) -> dict:
     """Current status, times and gate for one flight."""
+    _maybe_fail("flights")
     return _get_flight_or_404(flight_no)
 
 
 @app.get("/bookings/{booking_ref}")
 def get_booking(booking_ref: str) -> dict:
     """Passenger, fare class, seat, and the flight they're currently on."""
+    _maybe_fail("bookings")
     return _booking_view(_get_booking_or_404(booking_ref))
 
 
@@ -174,7 +197,7 @@ def find_alternates(
     out — the agent should be able to say "the 7:30 is full" instead of
     silently pretending it doesn't exist.
     """
-    _maybe_fail()
+    _maybe_fail("alternates")
 
     cutoff = None
     if arrive_by:
@@ -283,8 +306,22 @@ def issue_voucher(req: VoucherRequest) -> dict:
     return {**deepcopy(voucher), "reissued": False}
 
 
+class ChaosRequest(BaseModel):
+    rate: float = Field(0.0, ge=0.0, le=1.0)
+    mode: Literal["error", "timeout"] = "error"
+    scope: Literal["alternates", "flights", "bookings", "all"] = "alternates"
+
+
+@app.post("/admin/chaos")
+def set_chaos(req: ChaosRequest) -> dict:
+    """Point failures at a specific endpoint for the duration of one test."""
+    _chaos.update(rate=req.rate, mode=req.mode, scope=req.scope)
+    return dict(_chaos)
+
+
 @app.post("/admin/reset")
 def reset() -> dict:
-    """Restore seed state. For demos and, later, eval runs."""
+    """Restore seed state and clear any injected chaos."""
     _load_seed()
+    _chaos.update(rate=CHAOS_RATE, mode="error", scope="alternates")
     return {"status": "reset", "flights": len(_flights), "bookings": len(_bookings)}

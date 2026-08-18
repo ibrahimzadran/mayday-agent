@@ -1,0 +1,46 @@
+name: evals
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  fast-evals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt python-dotenv
+
+      - name: Consent gate unit tests
+        # No model involved, so these run even without an API key and are the
+        # cheapest possible signal on the one irreversible action.
+        run: |
+          python -m uvicorn backend.main:app --port 8001 &
+          for i in $(seq 30); do curl -sf localhost:8001/health && break; sleep 1; done
+          PYTHONPATH=. python tests_consent_gate.py
+
+      - name: Build policy index
+        if: ${{ env.GOOGLE_API_KEY != '' }}
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          GOOGLE_GENAI_USE_VERTEXAI: "FALSE"
+        run: python -m mayday.policy_index
+
+      - name: Fast eval suite
+        # Skipped on forks and on repos without the secret, so a missing key
+        # is a skip rather than a confusing red.
+        if: ${{ env.GOOGLE_API_KEY != '' }}
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          GOOGLE_GENAI_USE_VERTEXAI: "FALSE"
+          MAYDAY_CHAOS_RATE: "0"
+        run: PYTHONPATH=. python -m evals --fast --pause 20
